@@ -25,7 +25,7 @@ print(response.json()) # [{"project_name":"OCEANOGRAPHY"},{"project_name":"MARIN
 
 This library exports a single client name `Client`. Instantiating this class produces a `requests.Session` client from the Python requests library. The Hakai API Python Client inherits directly from `requests.Session` thus all methods available on that parent class are available. For details see the [requests documentation](http://docs.python-requests.org/).
 
-The hakai_api `Client` class also contains a property `api_root` which is useful for constructing urls to access data from the API. The above [Quickstart example](#Quickstart) demonstrates using this property to construct a url to access project names.
+The hakai_api `Client` class also contains a property `api_root` which is useful for constructing urls to access data from the API. The above [Quickstart example](#quickstart) demonstrates using this property to construct a url to access project names.
 
 ## API endpoints
 
