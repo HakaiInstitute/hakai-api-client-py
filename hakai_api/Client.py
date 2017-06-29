@@ -74,8 +74,13 @@ class Client(OAuth2Session):
 
         with open(self._credentials_file, 'rb') as infile:
             cache = pickle.load(infile)
-            api_root = cache["api_root"]
-            credentials = cache["credentials"]
+
+            try:
+                api_root = cache["api_root"]
+                credentials = cache["credentials"]
+            except KeyError:
+                os.remove(self._credentials_file)
+                return False
 
             now = datetime.now(tz=timezone.utc).timestamp()
             credentials_expired = now > credentials['expires_at']
