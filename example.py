@@ -12,4 +12,4 @@ url = '%s/%s' % (client.api_root, 'eims/views/station_matrix?limit=-1&fields=pro
 response = client.get(url)
 
 print(url)
-print(response.text)
+print(response.json())
