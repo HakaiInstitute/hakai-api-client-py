@@ -58,7 +58,11 @@ class Client(OAuth2Session):
     def _save_credentials(self, credentials):
         """Save the credentials object to a file."""
         with open(self._credentials_file, 'wb') as outfile:
-            pickle.dump(credentials, outfile)
+            cache = {
+                "api_root": self.api_root,
+                "credentials": credentials
+            }
+            pickle.dump(cache, outfile)
 
     def _try_to_load_credentials(self):
         """Try to load the cached credentials file.
@@ -69,9 +73,15 @@ class Client(OAuth2Session):
             return False
 
         with open(self._credentials_file, 'rb') as infile:
-            credentials = pickle.load(infile)
+            cache = pickle.load(infile)
+            api_root = cache["api_root"]
+            credentials = cache["credentials"]
+
             now = datetime.now(tz=timezone.utc).timestamp()
-            if now > credentials['expires_at']:
+            credentials_expired = now > credentials['expires_at']
+            same_api = api_root == self._api_root
+
+            if not same_api or credentials_expired:
                 os.remove(self._credentials_file)
                 return False
             return credentials
