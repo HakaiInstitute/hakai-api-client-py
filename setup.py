@@ -9,7 +9,9 @@ setup(name='hakai_api',
       license='MIT',
       packages=['hakai_api'],
       install_requires=[
+          'future',
           'requests',
           'requests-oauthlib',
+          'pytz',
       ],
       zip_safe=False)
