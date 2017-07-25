@@ -8,9 +8,11 @@ from __future__ import print_function
 
 import os
 import pickle
-from datetime import datetime, timezone
+from builtins import input
+from datetime import datetime
+from pytz import utc
 from requests_oauthlib import OAuth2Session
-
+from time import mktime
 
 class Client(OAuth2Session):
     """docstring for Client."""
@@ -73,16 +75,16 @@ class Client(OAuth2Session):
             return False
 
         with open(self._credentials_file, 'rb') as infile:
-            cache = pickle.load(infile)
-
             try:
+                cache = pickle.load(infile)
                 api_root = cache["api_root"]
                 credentials = cache["credentials"]
-            except KeyError:
+            except (KeyError, ValueError):
                 os.remove(self._credentials_file)
                 return False
 
-            now = datetime.now(tz=timezone.utc).timestamp()
+            now = int((mktime(datetime.now(tz=utc).timetuple()) + datetime.now(
+                tz=utc).microsecond / 1000000.0))  # utc timestamp
             credentials_expired = now > credentials['expires_at']
             same_api = api_root == self._api_root
 
