@@ -2,6 +2,9 @@
 
 This project exports a single Python class that can be used to make HTTP requests to the Hakai API resource server. The Class extends the functionality of the popular Python requests library so that OAuth2 configuration is completed without needing to know the details.
 
+# Requirements
+Tested with Python versions 2.7 and 3.6.
+
 # Installation
 
 ```bash
