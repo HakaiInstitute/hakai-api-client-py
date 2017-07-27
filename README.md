@@ -8,7 +8,7 @@ Tested with Python versions 2.7 and 3.6.
 # Installation
 
 ```bash
-pip install git+https://github.com/HakaiInstitute/hakai-api-client-python.git
+pip install hakai-api
 ```
 
 # Quickstart
@@ -35,7 +35,7 @@ The hakai_api `Client` class also contains a property `api_root` which is useful
 
 # API endpoints
 
-For details about the API, including available endpoints where data can be requested, see the [Hakai API documentation](https://github.com/HakaiInstitute/hakai-api).
+For details about the API, including available endpoints where data can be requested from, see the [Hakai API documentation](https://github.com/HakaiInstitute/hakai-api).
 
 # Advanced usage
 
@@ -45,4 +45,13 @@ You can specify which API to access when instantiating the Client. By default, t
 # Get a client for a locally running API instance
 client = Client("http://localhost:8666")
 print(client.api_root) # http://localhost:8666
+```
+
+# Development
+The business code for this package is in the file [`hakai_api/Client.py`](hakai_api/Client.py). The `./setup.py` file is important for giving details about how to install the package when users do `pip install hakai-api`. To upload the package to PyPI, I recommend reading [this tutorial](https://packaging.python.org/tutorials/distributing-packages/#uploading-your-project-to-pypi) which details how to go about uploading or updating the package. The gist of this tutorial is to create a `~/.pypirc` file with PyPI credentials, then do:
+
+```bash
+python setup.py sdist
+python setup.py bdist_wheel --universal
+twine upload dist/*
 ```
