@@ -15,5 +15,11 @@ setup(
         'requests-oauthlib',
         'pytz',
     ],
-    zip_safe=False
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 2.7'
+    ]
 )
