@@ -8,11 +8,15 @@ from __future__ import print_function
 
 import os
 import pickle
-from builtins import input
 from datetime import datetime
 from pytz import utc
 from requests_oauthlib import OAuth2Session
 from time import mktime
+
+try:
+  input = raw_input
+except NameError:
+  pass
 
 class Client(OAuth2Session):
     """docstring for Client."""
