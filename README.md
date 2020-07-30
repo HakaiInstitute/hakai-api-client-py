@@ -19,12 +19,12 @@ from hakai_api import Client
 # Get the api request client
 client = Client() # Follow stdout prompts to get an API token
 
-# Make a data request for sampling stations
-url = '%s/%s' % (client.api_root, 'eims/views/station_matrix?limit=-1&fields=project_name&distinct')
+# Make a data request for chlorophyll data
+url = '%s/%s' % (client.api_root, 'eims/views/output/chlorophyll?limit=50')
 response = client.get(url)
 
-print(url) # https://hecate.hakai.org/api/eims/views/station_matrix...
-print(response.json()) # [{"project_name":"OCEANOGRAPHY"},{"project_name":"MARINEGEO"}...
+print(url) # https://hecate.hakai.org/api/eims/views/output/chlorophyll...
+print(response.json()) # [{'action': '', 'event_pk': 7064, 'rn': '1', 'date': '2012-05-17', 'work_area': 'CALVERT'...
 ```
 
 # Methods
