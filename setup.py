@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='hakai_api',
-      version='0.2.0',
+      version='0.2.2',
       description='Get Hakai database resources with http calls',
       url='https://github.com/tayden/hakai-api-client-python',
       author='Taylor Denouden',

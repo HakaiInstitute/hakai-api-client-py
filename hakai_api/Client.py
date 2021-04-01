@@ -1,7 +1,7 @@
 """This allows authorized requests to the Hakai API using the requests library.
 
-Written by: Taylor Denouden and Chris Davis
-Last updated: June 2017
+Written by: Taylor Denouden, Chris Davis, and Nate Rosenstock
+Last updated: April 2021
 """
 
 from __future__ import print_function
