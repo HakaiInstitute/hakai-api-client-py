@@ -10,8 +10,9 @@ setup(name='hakai_api',
       packages=['hakai_api'],
       install_requires=[
           'future',
+          'pytz',
           'requests',
           'requests-oauthlib',
-          'pytz',
+          'six',
       ],
       zip_safe=False)

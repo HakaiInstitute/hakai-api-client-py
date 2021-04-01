@@ -9,14 +9,12 @@ from __future__ import print_function
 import os
 import pickle
 from datetime import datetime
-from pytz import utc
-from requests_oauthlib import OAuth2Session
 from time import mktime
 
-try:
-  input = raw_input
-except NameError:
-  pass
+from pytz import utc
+from requests_oauthlib import OAuth2Session
+from six.moves import input
+
 
 class Client(OAuth2Session):
     # noinspection SpellCheckingInspection
@@ -31,8 +29,8 @@ class Client(OAuth2Session):
                       Defaults to the production server.
         """
         self._api_root = api_root
-        self._authorization_base_url = '%s/auth/oauth2' % api_root
-        self._token_url = '%s/auth/oauth2/token' % api_root
+        self._authorization_base_url = '{}/auth/oauth2'.format(api_root)
+        self._token_url = '{}/auth/oauth2/token'.format(api_root)
 
         # Try to get cached credentials
         credentials = self._try_to_load_credentials()
@@ -106,11 +104,9 @@ class Client(OAuth2Session):
         """
         # Acquire and store credentials from web sign-in.
         oauth2_session = OAuth2Session(self._client_id)
-        authorization_url, state = oauth2_session.authorization_url(
-            self._authorization_base_url)
+        authorization_url, state = oauth2_session.authorization_url(self._authorization_base_url)
         print('Please go here and authorize:')
         print(authorization_url)
 
         redirect_response = input('\nPaste the full redirect URL here:\n')
-        return oauth2_session.fetch_token(
-            self._token_url, authorization_response=redirect_response)
+        return oauth2_session.fetch_token(self._token_url, authorization_response=redirect_response)
