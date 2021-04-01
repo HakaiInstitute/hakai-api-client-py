@@ -54,3 +54,4 @@ The `./setup.py` file is important for giving details about how to install the p
 
 To build a new PyPi package version push a tag matching the pattern `v[0-9]+.[0-9]+.[0-9]+` or `v[0-9]+.[0-9]+.[0-9]+rc[0-9]+` to the origin (e.g. `v0.4.1` or `v0.5.2rc1`).
 Github Actions should take care of packagin and pushing it to Hakai's PyPi repository from there.
+
