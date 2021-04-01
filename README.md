@@ -51,4 +51,6 @@ print(client.api_root) # http://localhost:8666
 # Development
 The business code for this package is in the file [`hakai_api/Client.py`](hakai_api/Client.py).
 The `./setup.py` file is important for giving details about how to install the package when users do `pip install hakai-api`.
-You must update the semantic version info in setup.py and then push a tag to the Github origin in order for PyPi to build and release a new version of the package.
+
+To build a new PyPi package version push a tag matching the pattern `v[0-9]+.[0-9]+.[0-9]+` or `v[0-9]+.[0-9]+.[0-9]+rc[0-9]+` to the origin (e.g. `v0.4.1` or `v0.5.2rc1`).
+Github Actions should take care of packagin and pushing it to Hakai's PyPi repository from there.
