@@ -1,14 +1,12 @@
 # Hakai Api Python Client
 
-This project exports a single Python class that can be used to make HTTP requests to the Hakai API resource server. The Class extends the functionality of the popular Python requests library so that OAuth2 configuration is completed without needing to know the details.
-
-# Requirements
-Tested with Python versions 2.7 and 3.6.
+This project exports a single Python class that can be used to make HTTP requests to the Hakai API resource server.
+The exported `Client` class extends the functionality of the Python [requests library](https://docs.python-requests.org/en/master/) to supply Hakai OAuth2 credentials with url requests.
 
 # Installation
 
 ```bash
-pip install git+https://github.com/HakaiInstitute/hakai-api-client-python.git
+pip install hakai-api
 ```
 
 # Quickstart
@@ -35,7 +33,7 @@ The hakai_api `Client` class also contains a property `api_root` which is useful
 
 # API endpoints
 
-For details about the API, including available endpoints where data can be requested, see the [Hakai API documentation](https://github.com/HakaiInstitute/hakai-api).
+For details about the API, including available endpoints where data can be requested from, see the [Hakai API documentation](https://github.com/HakaiInstitute/hakai-api).
 
 # Advanced usage
 
@@ -46,3 +44,8 @@ You can specify which API to access when instantiating the Client. By default, t
 client = Client("http://localhost:8666")
 print(client.api_root) # http://localhost:8666
 ```
+
+# Development
+The business code for this package is in the file [`hakai_api/Client.py`](hakai_api/Client.py).
+The `./setup.py` file is important for giving details about how to install the package when users do `pip install hakai-api`.
+You must update the semantic version info in setup.py and then push a tag to the Github origin in order for PyPi to build and release a new version of the package.
