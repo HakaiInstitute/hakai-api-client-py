@@ -19,7 +19,9 @@ except NameError:
   pass
 
 class Client(OAuth2Session):
-    """docstring for Client."""
+    # noinspection SpellCheckingInspection
+    _client_id = '289782143400-1f4r7l823cqg8fthd31ch4ug0thpejme.apps.googleusercontent.com'
+    _credentials_file = os.path.expanduser('~/.hakai-api-credentials')
 
     def __init__(self, api_root='https://hecate.hakai.org/api'):
         """Create a new Client class with credentials.
@@ -28,11 +30,6 @@ class Client(OAuth2Session):
             api_root: The base url of the hakai api you want to call.
                       Defaults to the production server.
         """
-        self._client_id = (
-            '289782143400-1f4r7l823cqg8fthd31ch4ug0thpejme'
-            '.apps.googleusercontent.com'
-        )
-        self._credentials_file = os.path.expanduser('~/.hakai-api-credentials')
         self._api_root = api_root
         self._authorization_base_url = '%s/auth/oauth2' % api_root
         self._token_url = '%s/auth/oauth2/token' % api_root
@@ -60,6 +57,11 @@ class Client(OAuth2Session):
     def credentials(self):
         """Return the credentials object."""
         return self._credentials
+
+    @classmethod
+    def reset_credentials(cls):
+        if os.path.isfile(cls._credentials_file):
+            os.remove(cls._credentials_file)
 
     def _save_credentials(self, credentials):
         """Save the credentials object to a file."""
