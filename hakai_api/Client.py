@@ -1,10 +1,8 @@
-"""This allows authorized requests to the Hakai API using the requests library.
+"""Get authorized requests to the Hakai API using the requests library.
 
 Written by: Taylor Denouden, Chris Davis, and Nate Rosenstock
 Last updated: April 2021
 """
-
-from __future__ import print_function
 
 import os
 import pickle
@@ -13,7 +11,6 @@ from time import mktime
 
 from pytz import utc
 from requests_oauthlib import OAuth2Session
-from six.moves import input
 
 
 class Client(OAuth2Session):
@@ -29,8 +26,8 @@ class Client(OAuth2Session):
                       Defaults to the production server.
         """
         self._api_root = api_root
-        self._authorization_base_url = '{}/auth/oauth2'.format(api_root)
-        self._token_url = '{}/auth/oauth2/token'.format(api_root)
+        self._authorization_base_url = f'{api_root}/auth/oauth2'
+        self._token_url = f'{api_root}/auth/oauth2/token'
 
         # Try to get cached credentials
         credentials = self._try_to_load_credentials()
