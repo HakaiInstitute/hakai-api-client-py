@@ -9,6 +9,9 @@ The exported `Client` class extends the functionality of the Python [requests li
 pip install hakai-api
 ```
 
+# Requirements
+Python 3.6 or higher
+
 # Quickstart
 
 ```python

@@ -4,8 +4,6 @@ Written by: Taylor Denouden, Chris Davis, and Nate Rosenstock
 Last updated: April 2021
 """
 
-from __future__ import print_function
-
 import os
 import pickle
 from datetime import datetime
@@ -13,7 +11,6 @@ from time import mktime
 
 from pytz import utc
 from requests_oauthlib import OAuth2Session
-from six.moves import input
 
 
 class Client(OAuth2Session):

@@ -1,5 +1,3 @@
-future
 pytz
 requests
 requests-oauthlib
-six
