@@ -109,4 +109,5 @@ class Client(OAuth2Session):
         print(authorization_url)
 
         redirect_response = input('\nPaste the full redirect URL here:\n')
+        assert redirect_response[:5] == "https", "Make sure you paste only the https url"
         return oauth2_session.fetch_token(self._token_url, authorization_response=redirect_response)
