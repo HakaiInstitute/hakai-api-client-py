@@ -7,7 +7,7 @@ Last updated: April 2021
 import os
 import pickle
 from datetime import datetime
-from time import mktime
+from time import mktime, sleep
 from typing import Dict, Union
 
 from pytz import utc
@@ -89,7 +89,8 @@ class Client(OAuth2Session):
         print('Please go here and authorize:')
         print(self._authorization_base_url)
 
-        response = input('\nCopy and past the credentials:\n')
+        sleep(0.05)  # Workaround for input / print stream race condition
+        response = input('\nCopy and past your credentials from the login page:\n')
 
         # Reformat response to dict
         credentials = dict(map(lambda x: x.split("="), response.split("&")))
