@@ -8,17 +8,17 @@ import os
 import pickle
 from datetime import datetime
 from time import mktime
+from typing import Dict, Union
 
 from pytz import utc
 from requests_oauthlib import OAuth2Session
 
 
 class Client(OAuth2Session):
-    # noinspection SpellCheckingInspection
-    _client_id = '289782143400-1f4r7l823cqg8fthd31ch4ug0thpejme.apps.googleusercontent.com'
-    _credentials_file = os.path.expanduser('~/.hakai-api-credentials')
+    _credentials_file = os.path.expanduser('~/.hakai-api-auth')
 
-    def __init__(self, api_root='https://hecate.hakai.org/api'):
+    def __init__(self, api_root: str = "https://hecate.hakai.org/api",
+                 login_page: str = "https://hecate.hakai.org/api-client-login"):
         """Create a new Client class with credentials.
 
         Params:
@@ -26,8 +26,7 @@ class Client(OAuth2Session):
                       Defaults to the production server.
         """
         self._api_root = api_root
-        self._authorization_base_url = f'{api_root}/auth/oauth2'
-        self._token_url = f'{api_root}/auth/oauth2/token'
+        self._authorization_base_url = login_page
 
         # Try to get cached credentials
         credentials = self._try_to_load_credentials()
@@ -44,12 +43,12 @@ class Client(OAuth2Session):
         super(Client, self).__init__(token=self._credentials)
 
     @property
-    def api_root(self):
+    def api_root(self) -> str:
         """Return the api base url."""
         return self._api_root
 
     @property
-    def credentials(self):
+    def credentials(self) -> Dict:
         """Return the credentials object."""
         return self._credentials
 
@@ -58,53 +57,40 @@ class Client(OAuth2Session):
         if os.path.isfile(cls._credentials_file):
             os.remove(cls._credentials_file)
 
-    def _save_credentials(self, credentials):
+    def _save_credentials(self, credentials: Dict):
         """Save the credentials object to a file."""
         with open(self._credentials_file, 'wb') as outfile:
-            cache = {
-                "api_root": self.api_root,
-                "credentials": credentials
-            }
-            pickle.dump(cache, outfile)
+            pickle.dump(credentials, outfile)
 
-    def _try_to_load_credentials(self):
-        """Try to load the cached credentials file.
-
-        Returns false if unsuccessful and returns credentials if success.
-        """
+    def _try_to_load_credentials(self) -> Union[Dict, bool]:
+        """Try to load the cached credentials file."""
         if not os.path.isfile(self._credentials_file):
             return False
 
         with open(self._credentials_file, 'rb') as infile:
             try:
-                cache = pickle.load(infile)
-                api_root = cache["api_root"]
-                credentials = cache["credentials"]
+                credentials = pickle.load(infile)
+                expires_at = credentials['expires_at']
             except (KeyError, ValueError):
                 os.remove(self._credentials_file)
                 return False
 
             now = int((mktime(datetime.now(tz=utc).timetuple()) + datetime.now(
                 tz=utc).microsecond / 1000000.0))  # utc timestamp
-            credentials_expired = now > credentials['expires_at']
-            same_api = api_root == self._api_root
 
-            if not same_api or credentials_expired:
+            if now > expires_at:
                 os.remove(self._credentials_file)
                 return False
+
             return credentials
 
-    def _get_credentials_from_web(self):
-        """Get user credentials from a web sign-in.
-
-        Returns false if unsuccessful and returns credentials if success.
-        """
-        # Acquire and store credentials from web sign-in.
-        oauth2_session = OAuth2Session(self._client_id)
-        authorization_url, state = oauth2_session.authorization_url(self._authorization_base_url)
+    def _get_credentials_from_web(self) -> Dict:
+        """Get user credentials from a web sign-in."""
         print('Please go here and authorize:')
-        print(authorization_url)
+        print(self._authorization_base_url)
 
-        redirect_response = input('\nPaste the full redirect URL here:\n')
-        assert redirect_response[:5] == "https", "Make sure you paste only the https url"
-        return oauth2_session.fetch_token(self._token_url, authorization_response=redirect_response)
+        response = input('\nCopy and past the credentials:\n')
+
+        # Reformat response to dict
+        credentials = dict(map(lambda x: x.split("="), response.split("&")))
+        return credentials
