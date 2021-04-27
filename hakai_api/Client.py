@@ -70,7 +70,7 @@ class Client(OAuth2Session):
         with open(self._credentials_file, 'rb') as infile:
             try:
                 credentials = pickle.load(infile)
-                expires_at = credentials['expires_at']
+                expires_at = int(credentials['expires_at'])
             except (KeyError, ValueError):
                 os.remove(self._credentials_file)
                 return False
