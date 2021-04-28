@@ -16,5 +16,6 @@ setup(
     version=os.getenv('VERSION', '1.0.0.dev1'),
     license='MIT',
     description='Get Hakai database resources using http calls',
-    long_description=open('README.md').read()
+    long_description=open('README.md').read(),
+    long_description_content_type="text/markdown"
 )
