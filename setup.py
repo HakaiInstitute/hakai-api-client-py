@@ -4,17 +4,17 @@ from setuptools import setup
 
 setup(
     name='hakai_api',
-    packages=['hakai_api'],
-    version=os.getenv('VERSION', "latest"),
-    description='Get Hakai database resources using http calls',
-    url='https://github.com/tayden/hakai-api-client-python',
+    url='https://github.com/HakaiInstitute/hakai-api-client-python',
     author='Taylor Denouden',
     author_email='taylor.denouden@hakai.org',
-    license='MIT',
+    packages=['hakai_api'],
     install_requires=[
         'pytz',
         'requests',
         'requests-oauthlib',
     ],
-    zip_safe=False,
+    version=os.getenv('VERSION', 'latest'),
+    license='MIT',
+    description='Get Hakai database resources using http calls',
+    long_description=open('README.md').read()
 )
