@@ -1,2 +1,2 @@
 from hakai_api.Client import Client
-all = [Client]
+__all__ = [Client]
