@@ -5,7 +5,7 @@ from setuptools import setup
 setup(
     name='hakai_api',
     packages=['hakai_api'],
-    version=os.environ['VERSION'],
+    version=os.getenv('VERSION', "latest"),
     description='Get Hakai database resources using http calls',
     url='https://github.com/tayden/hakai-api-client-python',
     author='Taylor Denouden',
