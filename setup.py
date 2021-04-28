@@ -13,7 +13,7 @@ setup(
         'requests',
         'requests-oauthlib',
     ],
-    version=os.getenv('VERSION', '1.0.0dev1'),
+    version=os.getenv('VERSION', '1.0.0.dev1'),
     license='MIT',
     description='Get Hakai database resources using http calls',
     long_description=open('README.md').read()
