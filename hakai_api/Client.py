@@ -38,9 +38,12 @@ class Client(OAuth2Session):
         # Load credentials from input or file
         if isinstance(credentials, str):
             credentials = dict(map(lambda x: x.split("="), credentials.split("&")))
-        elif credentials is None:
+            
+        if credentials is None:
             # Try to get cached credentials
             credentials = self._try_to_load_credentials()
+        else:
+            self._save_credentials(credentials)
 
         if credentials:
             self._credentials = credentials
