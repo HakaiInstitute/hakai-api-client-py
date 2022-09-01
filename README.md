@@ -48,10 +48,16 @@ client = Client("http://localhost:8666")
 print(client.api_root) # http://localhost:8666
 ```
 
+You can also pass in the credentials string retrieved from the hakai API login page while initiating the Client class.
+
+```python
+# Pass a credentials token as the Client Class is initiated
+client = Client(credentials="CREDENTIAL_TOKEN")
+```
+
 # Development
 The business code for this package is in the file [`hakai_api/Client.py`](hakai_api/Client.py).
 The `./setup.py` file is important for giving details about how to install the package when users do `pip install hakai-api`.
 
 To build a new PyPi package version push a tag matching the pattern `v[0-9]+.[0-9]+.[0-9]+` or `v[0-9]+.[0-9]+.[0-9]+rc[0-9]+` to the origin (e.g. `v0.4.1` or `v0.5.2rc1`).
 Github Actions should take care of packaging and pushing it to Hakai's PyPi repository from there.
-
