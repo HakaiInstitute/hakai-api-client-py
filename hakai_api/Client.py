@@ -5,7 +5,7 @@ Last updated: April 2021
 """
 
 import os
-import pickle
+import json
 from datetime import datetime
 from time import mktime, sleep
 from typing import Dict, Union
@@ -68,8 +68,8 @@ class Client(OAuth2Session):
 
     def _save_credentials(self, credentials: Dict):
         """Save the credentials object to a file."""
-        with open(self._credentials_file, "wb") as outfile:
-            pickle.dump(credentials, outfile)
+        with open(self._credentials_file, "w") as outfile:
+            json.dump(credentials, outfile)
 
     def _try_to_load_credentials_file(self) -> Union[Dict, bool]:
         """Try to load the cached credentials file."""
@@ -78,7 +78,7 @@ class Client(OAuth2Session):
 
         with open(self._credentials_file, "rb") as infile:
             try:
-                credentials = pickle.load(infile)
+                credentials = json.load(infile)
                 expires_at = int(credentials["expires_at"])
             except (KeyError, ValueError):
                 os.remove(self._credentials_file)
