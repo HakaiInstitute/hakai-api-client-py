@@ -10,7 +10,6 @@ from datetime import datetime
 from time import mktime, sleep
 from typing import Dict, Union
 
-from pytz import utc
 from requests_oauthlib import OAuth2Session
 
 
@@ -86,8 +85,8 @@ class Client(OAuth2Session):
 
             now = int(
                 (
-                    mktime(datetime.now(tz=utc).timetuple())
-                    + datetime.now(tz=utc).microsecond / 1000000.0
+                    mktime(datetime.now().timetuple())
+                    + datetime.now().microsecond / 1000000.0
                 )
             )  # utc timestamp
 
