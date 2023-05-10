@@ -48,8 +48,8 @@ url = '%s/%s' % (client.api_root, 'eims/views/output/chlorophyll?limit=50')
 response = client.get(url)
 
 print(url)  # https://hecate.hakai.org/api/eims/views/output/chlorophyll...
-print(
-    response.json())  # [{'action': '', 'event_pk': 7064, 'rn': '1', 'date': '2012-05-17', 'work_area': 'CALVERT'...
+print(response.json())
+# [{'action': '', 'event_pk': 7064, 'rn': '1', 'date': '2012-05-17', 'work_area': 'CALVERT'...
 ```
 
 # Methods
