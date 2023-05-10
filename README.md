@@ -28,7 +28,7 @@ OAuth2 credentials with url requests.
 
 # Installation
 
-Installing this package with PIP is easy. Python 3.7 or higher is required.
+Installing this package with PIP is easy. Python 3.8 or higher is required.
 Simply run the following command:
 
 ```bash
