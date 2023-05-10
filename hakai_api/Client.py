@@ -89,8 +89,7 @@ class Client(OAuth2Session):
         """Check if the cached credentials exist and are valid."""
         if not os.path.isfile(cls._credentials_file):
             return False
-
-        with open(cls._credentials_file, "rb"):
+        with open(cls._credentials_file, "r"):
             try:
                 credentials = cls._get_credentials_from_file()
                 expires_at = int(credentials["expires_at"])
@@ -114,7 +113,7 @@ class Client(OAuth2Session):
     @classmethod
     def _get_credentials_from_file(cls) -> Dict:
         """Get user credentials from a cached file."""
-        with open(cls._credentials_file, "rb") as infile:
+        with open(cls._credentials_file, "r") as infile:
             return json.load(infile)
 
     def _get_credentials_from_web(self) -> Dict:
