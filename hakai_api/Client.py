@@ -40,8 +40,7 @@ class Client(OAuth2Session):
             self._credentials = credentials
         elif isinstance(credentials, str):
             # Parse credentials from string
-            self._credentials = dict(
-                map(lambda x: x.split("="), credentials.split("&")))
+            self._credentials = self._parse_credentials_string(credentials)
         elif self.file_credentials_are_valid():
             self._credentials = self._get_credentials_from_file()
         else:
@@ -92,7 +91,7 @@ class Client(OAuth2Session):
         with open(cls._credentials_file, "r"):
             try:
                 credentials = cls._get_credentials_from_file()
-                expires_at = int(credentials["expires_at"])
+                expires_at = credentials["expires_at"]
             except (KeyError, ValueError):
                 os.remove(cls._credentials_file)
                 return False
@@ -114,7 +113,9 @@ class Client(OAuth2Session):
     def _get_credentials_from_file(cls) -> Dict:
         """Get user credentials from a cached file."""
         with open(cls._credentials_file, "r") as infile:
-            return json.load(infile)
+            result = json.load(infile)
+        result = Client._check_keys_convert_types(result)
+        return result
 
     def _get_credentials_from_web(self) -> Dict:
         """Get user credentials from a web sign-in."""
@@ -124,4 +125,29 @@ class Client(OAuth2Session):
 
         # Reformat response to dict
         credentials = dict(map(lambda x: x.split("="), response.split("&")))
+        return credentials
+
+    @staticmethod
+    def _parse_credentials_string(credentials: str) -> Dict:
+        """Parse a credentials string into a dictionary."""
+        result = dict(map(lambda x: x.split("="), credentials.split("&")))
+        result = Client._check_keys_convert_types(result)
+        return result
+
+    @staticmethod
+    def _check_keys_convert_types(credentials: dict) -> dict:
+        """Check that the credentials dict has the required keys and convert types."""
+        missing_keys = [key for key in ["access_token", "token_type", "expires_at"] if
+                        key not in credentials]
+        if len(missing_keys) > 0:
+            raise ValueError(
+                f"Credentials string is missing required keys: {str(missing_keys)}.")
+
+        # Convert expires_at to int
+        credentials["expires_at"] = int(float(credentials["expires_at"]))
+
+        # If expires_in is present, convert to int
+        if "expires_in" in credentials:
+            credentials["expires_in"] = int(float(credentials["expires_in"]))
+
         return credentials
