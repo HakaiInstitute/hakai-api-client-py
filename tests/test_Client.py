@@ -92,3 +92,31 @@ def test_custom_login_page():
 
     # Check that login page is set
     assert client.login_page == 'https://example.com/login'
+
+
+def test_credentials_from_env_variable():
+    """Test that credentials can be set with the HAKAI_API_CREDENTIALS environment variable."""
+    # Remove the cached credentials file if it exists
+    Client.reset_credentials()
+
+    # Create a client object
+    now = datetime.now()
+    os.environ['HAKAI_API_CREDENTIALS'] = f"token_type=Bearer&access_token=test_access_token&expires_at={now.timestamp() + 3600}"
+    client = Client()
+
+    assert client.credentials is not None
+
+    # Check that credentials are cached and valid
+    assert client.file_credentials_are_valid()
+
+    # Check that the cached credentials can be read
+    credentials = client._get_credentials_from_file()
+    assert credentials is not None
+
+    # Check that credentials can be deleted
+    Client.reset_credentials()
+    assert not client.file_credentials_are_valid()
+    assert not os.path.exists(client._credentials_file)
+
+    # Remove the environment variable
+    del os.environ['HAKAI_API_CREDENTIALS']
