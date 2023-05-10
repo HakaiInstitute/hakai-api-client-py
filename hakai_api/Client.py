@@ -17,6 +17,7 @@ class Client(OAuth2Session):
     _credentials_file = os.path.expanduser("~/.hakai-api-auth")
     DEFAULT_API_ROOT = "https://hecate.hakai.org/api"
     DEFAULT_LOGIN_PAGE = "https://hecate.hakai.org/api-client-login"
+    CREDENTIALS_ENV_VAR = "HAKAI_API_CREDENTIALS"
 
     def __init__(
             self,
@@ -36,7 +37,10 @@ class Client(OAuth2Session):
         self._login_page = login_page
         self._credentials = None
 
-        if isinstance(credentials, dict):
+        env_credentials = os.getenv(self.CREDENTIALS_ENV_VAR, None)
+        if env_credentials is not None:
+            self._credentials = self._parse_credentials_string(env_credentials)
+        elif isinstance(credentials, dict):
             self._credentials = credentials
         elif isinstance(credentials, str):
             # Parse credentials from string
