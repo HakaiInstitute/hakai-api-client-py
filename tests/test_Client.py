@@ -11,12 +11,14 @@ def test_get_valid_credentials_from_file():
 
     # Create a client object
     now = datetime.now()
-    client = Client(credentials={
-        "token_type": "Bearer",
-        "access_token": "test_access_token",
-        "expires_in": 3600,
-        "expires_at": now.timestamp() + 3600,
-    })
+    client = Client(
+        credentials={
+            "token_type": "Bearer",
+            "access_token": "test_access_token",
+            "expires_in": 3600,
+            "expires_at": now.timestamp() + 3600,
+        }
+    )
 
     # Check that the credentials are cached
     assert client.credentials is not None
@@ -41,12 +43,14 @@ def test_expired_credentials_are_handled():
 
     # Create a client object
     now = datetime.now()
-    client = Client(credentials={
-        "token_type": "Bearer",
-        "access_token": "test_access_token",
-        "expires_in": 3600,
-        "expires_at": now.timestamp() - 3600,
-    })
+    client = Client(
+        credentials={
+            "token_type": "Bearer",
+            "access_token": "test_access_token",
+            "expires_in": 3600,
+            "expires_at": now.timestamp() - 3600,
+        }
+    )
 
     # Check that the credentials are cached
     assert client.credentials is not None
@@ -65,15 +69,18 @@ def test_custom_api_root():
 
     # Create a client object
     now = datetime.now()
-    client = Client(credentials={
-        "token_type": "Bearer",
-        "access_token": "test_access_token",
-        "expires_in": 3600,
-        "expires_at": now.timestamp() + 3600,
-    }, api_root='https://example.com/api')
+    client = Client(
+        credentials={
+            "token_type": "Bearer",
+            "access_token": "test_access_token",
+            "expires_in": 3600,
+            "expires_at": now.timestamp() + 3600,
+        },
+        api_root="https://example.com/api",
+    )
 
     # Check that api root is set
-    assert client.api_root == 'https://example.com/api'
+    assert client.api_root == "https://example.com/api"
 
 
 def test_custom_login_page():
@@ -83,25 +90,34 @@ def test_custom_login_page():
 
     # Create a client object
     now = datetime.now()
-    client = Client(credentials={
-        "token_type": "Bearer",
-        "access_token": "test_access_token",
-        "expires_in": 3600,
-        "expires_at": now.timestamp() + 3600,
-    }, login_page='https://example.com/login')
+    client = Client(
+        credentials={
+            "token_type": "Bearer",
+            "access_token": "test_access_token",
+            "expires_in": 3600,
+            "expires_at": now.timestamp() + 3600,
+        },
+        login_page="https://example.com/login",
+    )
 
     # Check that login page is set
-    assert client.login_page == 'https://example.com/login'
+    assert client.login_page == "https://example.com/login"
 
 
 def test_credentials_from_env_variable():
-    """Test that credentials can be set with the HAKAI_API_CREDENTIALS environment variable."""
+    """Test setting credentials with HAKAI_API_CREDENTIALS environment variable."""
     # Remove the cached credentials file if it exists
     Client.reset_credentials()
 
     # Create a client object
     now = datetime.now()
-    os.environ['HAKAI_API_CREDENTIALS'] = f"token_type=Bearer&access_token=test_access_token&expires_at={now.timestamp() + 3600}"
+    os.environ["HAKAI_API_CREDENTIALS"] = "&".join(
+        [
+            "token_type=Bearer",
+            "access_token=test_access_token",
+            f"expires_at={now.timestamp() + 3600}",
+        ]
+    )
     client = Client()
 
     assert client.credentials is not None
@@ -119,4 +135,4 @@ def test_credentials_from_env_variable():
     assert not os.path.exists(client._credentials_file)
 
     # Remove the environment variable
-    del os.environ['HAKAI_API_CREDENTIALS']
+    del os.environ["HAKAI_API_CREDENTIALS"]
