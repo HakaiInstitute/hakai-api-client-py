@@ -105,9 +105,9 @@ class Client(OAuth2Session):
                 )
             )  # utc timestamp
 
-            if now > expires_at:
-                os.remove(cls._credentials_file)
-                return False
+        if now > expires_at:
+            cls.reset_credentials()
+            return False
 
         return True
 
