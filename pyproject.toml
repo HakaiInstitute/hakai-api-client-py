@@ -9,15 +9,17 @@ packages = [{include = "hakai_api"}]
 repository = "https://github.com/HakaiInstitute/hakai-api-client-py"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.8,<=3.11"
 pytz = "^2023.3"
 requests = "^2.30.0"
 requests-oauthlib = "^1.3.1"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.0.265"
 black = "^23.3.0"
+isort = "^5.12.0"
+pre-commit = "^3.3.1"
 pytest = "^7.3.1"
+ruff = "^0.0.265"
 
 [build-system]
 requires = ["poetry-core"]

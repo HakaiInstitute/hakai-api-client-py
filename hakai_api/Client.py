@@ -20,18 +20,18 @@ class Client(OAuth2Session):
     CREDENTIALS_ENV_VAR = "HAKAI_API_CREDENTIALS"
 
     def __init__(
-            self,
-            api_root: str = DEFAULT_API_ROOT,
-            login_page: str = DEFAULT_LOGIN_PAGE,
-            credentials: Union[str, Dict] = None,
+        self,
+        api_root: str = DEFAULT_API_ROOT,
+        login_page: str = DEFAULT_LOGIN_PAGE,
+        credentials: Union[str, Dict] = None,
     ):
         """Create a new Client class with credentials.
 
         Params:
             api_root: The base url of the hakai api you want to call.
-                      Defaults to the production server.
-            credentials (str, Dict): Credentials token retrieved from the hakai api login page.
-                                     If `None`, loads cached credentials or prompts for log in.
+                Defaults to the production server.
+            credentials (str, Dict): Credentials token retrieved from the hakai api
+                login page. If `None`, loads cached credentials or prompts for log in.
         """
         self._api_root = api_root
         self._login_page = login_page
@@ -102,8 +102,8 @@ class Client(OAuth2Session):
 
             now = int(
                 (
-                        mktime(datetime.now().timetuple())
-                        + datetime.now().microsecond / 1000000.0
+                    mktime(datetime.now().timetuple())
+                    + datetime.now().microsecond / 1000000.0
                 )
             )  # utc timestamp
 
@@ -141,11 +141,15 @@ class Client(OAuth2Session):
     @staticmethod
     def _check_keys_convert_types(credentials: dict) -> dict:
         """Check that the credentials dict has the required keys and convert types."""
-        missing_keys = [key for key in ["access_token", "token_type", "expires_at"] if
-                        key not in credentials]
+        missing_keys = [
+            key
+            for key in ["access_token", "token_type", "expires_at"]
+            if key not in credentials
+        ]
         if len(missing_keys) > 0:
             raise ValueError(
-                f"Credentials string is missing required keys: {str(missing_keys)}.")
+                f"Credentials string is missing required keys: {str(missing_keys)}."
+            )
 
         # Convert expires_at to int
         credentials["expires_at"] = int(float(credentials["expires_at"]))
