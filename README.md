@@ -80,6 +80,9 @@ client = Client(credentials="CREDENTIAL_TOKEN")
 Finally, you can set credentials for the client class using the `HAKAI_API_CREDENTIALS` environment variable. This is useful for e.g. setting credentials in a docker container.
 The value of the environment variable should be the credentials token retrieved from the Hakai API login page.
 
+# Contributing
+
+See [CONTRIBUTING](CONTRIBUTING.md)
 
 # License
 
