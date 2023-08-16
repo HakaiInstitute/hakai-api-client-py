@@ -38,13 +38,13 @@ class Client(OAuth2Session):
         self._credentials = None
 
         env_credentials = os.getenv(self.CREDENTIALS_ENV_VAR, None)
-        if env_credentials is not None:
-            self._credentials = self._parse_credentials_string(env_credentials)
-        elif isinstance(credentials, dict):
+        if isinstance(credentials, dict):
             self._credentials = credentials
         elif isinstance(credentials, str):
             # Parse credentials from string
             self._credentials = self._parse_credentials_string(credentials)
+        elif env_credentials is not None:
+            self._credentials = self._parse_credentials_string(env_credentials)
         elif self.file_credentials_are_valid():
             self._credentials = self._get_credentials_from_file()
         else:
