@@ -18,4 +18,4 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: chartboost/ruff-action@v1
+      - uses: astral-sh/ruff-action@v3
