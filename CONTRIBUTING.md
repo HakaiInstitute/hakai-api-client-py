@@ -25,10 +25,10 @@ All tests are located in the `tests/` directory.
 
 ## Configuration
 
-### UV
+### uv
 
-This project uses [UV](https://github.com/astral-sh/uv) for dependency management and
-package installation. Install UV using the instructions on their website before continuing.
+This project uses [uv](https://github.com/astral-sh/uv) for dependency management and
+package installation. Install `uv` using the instructions on their website before continuing.
 
 To set up an environment for development, clone this repository and run the following
 commands from the root directory of the repository:
