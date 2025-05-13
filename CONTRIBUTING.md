@@ -55,6 +55,12 @@ pre-commit install
 This is highly recommended and will prevent failed builds on GitHub Actions, as well as
 ensure consistent code style and quality.
 
+You can also run the pre-commit hooks manually on all files by running:
+
+```bash
+pre-commit run -a
+```
+
 ## Tests
 
 Tests and lint checks are automatically run on pull requests and pushes to the main
