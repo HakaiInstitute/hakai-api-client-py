@@ -1,0 +1,50 @@
+name: 'PyPI Publish 🐍'
+
+on:
+  push:
+    branches-ignore:
+      - '**'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+rc[0-9]+'
+
+jobs:
+  publish:
+    name: upload release to PyPI
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get tag
+        id: tag
+        run: echo "tag=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: "Set version"
+        run: |
+          uv version ${{ env.tag }}
+          uv lock
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run tests
+        run: uv run pytest tests
+
+      - name: Build the project
+        run: uv build
+
+      - name: Publish to PyPI
+        run: uv publish
