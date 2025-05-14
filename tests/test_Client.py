@@ -136,3 +136,24 @@ def test_credentials_from_env_variable():
 
     # Remove the environment variable
     del os.environ["HAKAI_API_CREDENTIALS"]
+
+
+def test_user_agent_header():
+    """Test that User-Agent header is correctly set."""
+    # Remove the cached credentials file if it exists
+    Client.reset_credentials()
+
+    # Create a client object
+    now = datetime.now()
+    client = Client(
+        credentials={
+            "token_type": "Bearer",
+            "access_token": "test_access_token",
+            "expires_in": 3600,
+            "expires_at": now.timestamp() + 3600,
+        },
+    )
+
+    # Check that the User-Agent header is set correctly
+    assert "User-Agent" in client.headers
+    assert client.headers["User-Agent"] == "hakai-api-client-py"

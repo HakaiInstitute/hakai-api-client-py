@@ -58,6 +58,9 @@ class Client(OAuth2Session):
 
         # Init the OAuth2Session parent class with credentials
         super(Client, self).__init__(token=self._credentials)
+        
+        # Set User-Agent header
+        self.headers.update({"User-Agent": "hakai-api-client-py"})
 
     @property
     def api_root(self) -> str:
