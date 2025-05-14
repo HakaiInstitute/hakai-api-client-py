@@ -18,6 +18,7 @@ class Client(OAuth2Session):
     DEFAULT_API_ROOT = "https://hecate.hakai.org/api"
     DEFAULT_LOGIN_PAGE = "https://hecate.hakai.org/api-client-login"
     CREDENTIALS_ENV_VAR = "HAKAI_API_CREDENTIALS"
+    USER_AGENT_ENV_VAR = "HAKAI_API_USER_AGENT"
 
     def __init__(
         self,
@@ -30,6 +31,8 @@ class Client(OAuth2Session):
         Params:
             api_root: The base url of the hakai api you want to call.
                 Defaults to the production server.
+            login_page: The url of the login page to direct users to.
+                Defaults to the production login page.
             credentials (str, Dict): Credentials token retrieved from the hakai api
                 login page. If `None`, loads cached credentials or prompts for log in.
         """
@@ -58,6 +61,10 @@ class Client(OAuth2Session):
 
         # Init the OAuth2Session parent class with credentials
         super(Client, self).__init__(token=self._credentials)
+        
+        # Set User-Agent header
+        user_agent = os.getenv(self.USER_AGENT_ENV_VAR, "hakai-api-client-py")
+        self.headers.update({"User-Agent": user_agent})
 
     @property
     def api_root(self) -> str:
