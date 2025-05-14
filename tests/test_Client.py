@@ -143,7 +143,11 @@ def test_user_agent_header():
     # Remove the cached credentials file if it exists
     Client.reset_credentials()
 
-    # Create a client object
+    # Make sure environment variable is not set for this test
+    if Client.USER_AGENT_ENV_VAR in os.environ:
+        del os.environ[Client.USER_AGENT_ENV_VAR]
+
+    # Create a client object with default User-Agent
     now = datetime.now()
     client = Client(
         credentials={
@@ -154,6 +158,27 @@ def test_user_agent_header():
         },
     )
 
-    # Check that the User-Agent header is set correctly
+    # Check that the default User-Agent header is set correctly
     assert "User-Agent" in client.headers
     assert client.headers["User-Agent"] == "hakai-api-client-py"
+
+    # Test with a custom User-Agent set via environment variable
+    custom_agent = "these-are-not-the-droids-you-are-looking-for"
+    os.environ[Client.USER_AGENT_ENV_VAR] = custom_agent
+
+    # Create a new client with the environment variable set
+    client_env = Client(
+        credentials={
+            "token_type": "Bearer",
+            "access_token": "test_access_token",
+            "expires_in": 3600,
+            "expires_at": now.timestamp() + 3600,
+        },
+    )
+
+    # Check that the custom User-Agent header from env var is set correctly
+    assert "User-Agent" in client_env.headers
+    assert client_env.headers["User-Agent"] == custom_agent
+
+    # Clean up - remove the environment variable
+    del os.environ[Client.USER_AGENT_ENV_VAR]
