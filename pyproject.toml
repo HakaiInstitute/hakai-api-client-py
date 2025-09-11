@@ -11,6 +11,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 
 dependencies = [
+    "pkce>=1.0.3",
     "pytz>=2025.2",
     "requests>=2.32.3",
     "requests-oauthlib>=2.0.0",
