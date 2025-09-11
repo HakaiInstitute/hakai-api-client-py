@@ -1,9 +1,6 @@
 """Get authorized requests to the Hakai API using the requests library.
 
 Supports both web flow (copy/paste credentials) and desktop flow (OAuth with PKCE).
-
-Written by: Taylor Denouden, Chris Davis, and Nate Rosenstock
-Last updated: Sept 2025
 """
 
 import json

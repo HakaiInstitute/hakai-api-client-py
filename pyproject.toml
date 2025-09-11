@@ -3,7 +3,14 @@ name = "hakai_api"
 version = "0.0.0"
 description = "Get Hakai database resources using http calls"
 authors = [
-    {name = "Taylor Denouden", email = "taylor.denouden@hakai.org"},
+    { name = "Taylor Denouden", email = "taylor.denouden@hakai.org" },
+    { name = "Chris Davis", email = "chris.davis@hakai.org" },
+    { name = "Nate Rosenstock", email = "nate.rosenstock@hakai.org" },
+    { name = "Sam Albers", email = "sam.albers@hakai.org" }
+]
+maintainers = [
+    { name = "Taylor Denouden", email = "taylor.denouden@hakai.org" },
+    { name = "Sam Albers", email = "sam.albers@hakai.org" }
 ]
 repository = "https://github.com/HakaiInstitute/hakai-api-client-py"
 license = "MIT"
