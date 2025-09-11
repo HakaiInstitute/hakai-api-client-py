@@ -16,6 +16,7 @@ from typing import Any, Literal
 from urllib.parse import parse_qs, urlparse
 
 import pkce
+from loguru import logger
 from requests_oauthlib import OAuth2Session
 
 
@@ -99,18 +100,24 @@ class Client(OAuth2Session):
         self._authorization_code = None
 
         # Try to get credentials from various sources
+        logger.debug(f"Initializing Hakai API client with auth_flow={auth_flow}")
         env_credentials = os.getenv(self.CREDENTIALS_ENV_VAR, None)
         if isinstance(credentials, dict):
+            logger.debug("Using provided credentials dictionary")
             self._credentials = credentials
         elif isinstance(credentials, str):
+            logger.debug("Parsing credentials from provided string")
             # Parse credentials from string
             self._credentials = self._parse_credentials_string(credentials)
         elif env_credentials is not None:
+            logger.debug("Loading credentials from environment variable")
             self._credentials = self._parse_credentials_string(env_credentials)
         elif self.file_credentials_are_valid():
+            logger.debug("Loading cached credentials from file")
             self._credentials = self._get_credentials_from_file()
         else:
             # Get new credentials based on auth_flow
+            logger.info(f"No valid cached credentials found, starting {auth_flow} authentication flow")
             if auth_flow == "desktop":
                 self._credentials = self._get_credentials_from_desktop_oauth()
             else:
@@ -118,9 +125,11 @@ class Client(OAuth2Session):
                 self._credentials = self._get_credentials_from_web()
 
         if self._credentials is None:
+            logger.error("Failed to obtain valid credentials from any source")
             raise ValueError("Credentials could not be set.")
 
         # Cache the credentials
+        logger.debug("Caching credentials to file")
         self._save_credentials_to_file(self._credentials)
 
         # Init the OAuth2Session parent class with credentials
@@ -129,6 +138,7 @@ class Client(OAuth2Session):
         # Set User-Agent header
         user_agent = os.getenv(self.USER_AGENT_ENV_VAR, "hakai-api-client-py")
         self.headers.update({"User-Agent": user_agent})
+        logger.info(f"Hakai API client initialized successfully with User-Agent: {user_agent}")
 
     @property
     def api_root(self) -> str:
@@ -169,16 +179,28 @@ class Client(OAuth2Session):
         Deletes the credentials file from the filesystem if it exists.
         """
         if os.path.isfile(cls._credentials_file):
+            logger.info("Removing cached credentials file")
             os.remove(cls._credentials_file)
+        else:
+            logger.debug("No cached credentials file to remove")
 
     def _save_credentials_to_file(self, credentials: dict) -> None:
         """Save the credentials object to a file.
 
         Args:
             credentials: Credentials object.
+
+        Raises:
+            OSError: If file cannot be created or written to.
+            json.JSONEncodeError: If credentials cannot be serialized to JSON.
         """
-        with open(self._credentials_file, "w") as outfile:
-            json.dump(credentials, outfile)
+        try:
+            with open(self._credentials_file, "w") as outfile:
+                json.dump(credentials, outfile)
+            logger.debug(f"Credentials saved to {self._credentials_file}")
+        except (OSError, json.JSONEncodeError) as e:
+            logger.error(f"Failed to save credentials to file: {e}")
+            raise
 
     @classmethod
     def file_credentials_are_valid(cls) -> bool:
@@ -191,21 +213,25 @@ class Client(OAuth2Session):
             True if the credentials are valid, False otherwise.
         """
         if not os.path.isfile(cls._credentials_file):
+            logger.debug("No cached credentials file found")
             return False
         with open(cls._credentials_file):
             try:
                 credentials = cls._get_credentials_from_file()
                 expires_at = credentials["expires_at"]
-            except (KeyError, ValueError):
+            except (KeyError, ValueError) as e:
+                logger.warning(f"Invalid cached credentials file, removing: {e}")
                 os.remove(cls._credentials_file)
                 return False
 
             now = int(mktime(datetime.now().timetuple()) + datetime.now().microsecond / 1000000.0)  # utc timestamp
 
         if now > expires_at:
+            logger.info("Cached credentials have expired, removing")
             cls.reset_credentials()
             return False
 
+        logger.debug("Cached credentials are valid")
         return True
 
     @classmethod
@@ -229,12 +255,23 @@ class Client(OAuth2Session):
 
         Returns:
             A dict containing the credentials parsed from user input.
+
+        Raises:
+            ValueError: If the input format is invalid or cannot be split properly.
+            AttributeError: If the input string lacks expected string methods.
         """
+        logger.info(f"Please visit the login page: {self._login_page}")
         response = input("\nCopy and paste your credentials from the login page:\n")
 
+        logger.debug("Parsing credentials from user input")
         # Reformat response to dict
-        credentials = dict(map(lambda x: x.split("="), response.split("&")))
-        return credentials
+        try:
+            credentials = dict(map(lambda x: x.split("="), response.split("&")))
+            logger.debug("Successfully parsed web credentials")
+            return credentials
+        except (ValueError, AttributeError) as e:
+            logger.error(f"Failed to parse credentials from input: {e}")
+            raise
 
     def _get_credentials_from_desktop_oauth(self) -> dict:
         """Get user credentials using desktop OAuth flow with PKCE.
@@ -267,11 +304,14 @@ class Client(OAuth2Session):
         webbrowser.open(auth_url)
 
         # Start local server to receive callback
+        logger.info(f"Starting local callback server on port {self._local_port}")
         self._authorization_code = self._wait_for_callback()
 
         if not self._authorization_code:
+            logger.error("Failed to receive authorization code from OAuth callback")
             raise ValueError("Failed to receive authorization code")
 
+        logger.debug("Successfully received authorization code, exchanging for tokens")
         # Exchange code for tokens
         tokens = self._exchange_code_for_tokens()
 
@@ -286,6 +326,9 @@ class Client(OAuth2Session):
         # Store refresh token if provided
         if "refresh_token" in tokens:
             credentials["refresh_token"] = tokens["refresh_token"]
+            logger.debug("Desktop OAuth completed successfully with refresh token")
+        else:
+            logger.debug("Desktop OAuth completed successfully without refresh token")
 
         return credentials
 
@@ -319,6 +362,7 @@ class Client(OAuth2Session):
                     received_state = params.get("state", [None])[0]
                     if received_state != self._state:
                         server_error = "State mismatch - possible CSRF attack"
+                        logger.error(server_error)
                         handler_self.send_error(400, server_error)
                         return
 
@@ -327,6 +371,7 @@ class Client(OAuth2Session):
                         error = params["error"][0]
                         error_desc = params.get("error_description", [""])[0]
                         server_error = f"OAuth error: {error} - {error_desc}"
+                        logger.error(server_error)
                         handler_self.send_error(400, server_error)
                         return
 
@@ -335,6 +380,7 @@ class Client(OAuth2Session):
 
                     if not authorization_code:
                         server_error = "No authorization code received"
+                        logger.error(server_error)
                         handler_self.send_error(400, server_error)
                         return
 
@@ -390,8 +436,10 @@ class Client(OAuth2Session):
         server.server_close()
 
         if server_error:
+            logger.error(f"OAuth callback server error: {server_error}")
             raise ValueError(server_error)
 
+        logger.debug("OAuth callback received successfully")
         return authorization_code
 
     def _exchange_code_for_tokens(self) -> dict:
@@ -420,10 +468,12 @@ class Client(OAuth2Session):
             try:
                 error_data = response.json()
                 error_msg += f" - {error_data.get('error', '')}: {error_data.get('error_description', '')}"
-            except Exception:
+            except (json.JSONDecodeError, ValueError):
                 error_msg += f" - {response.text}"
+            logger.error(error_msg)
             raise ValueError(error_msg)
 
+        logger.info("Successfully exchanged authorization code for tokens")
         return response.json()
 
     def refresh_token(self) -> bool:
@@ -437,7 +487,10 @@ class Client(OAuth2Session):
             True if refresh successful, False otherwise.
         """
         if "refresh_token" not in self._credentials:
+            logger.debug("No refresh token available, cannot refresh")
             return False
+
+        logger.debug("Attempting to refresh access token")
 
         import requests
 
@@ -451,6 +504,7 @@ class Client(OAuth2Session):
             response = requests.post(refresh_url, json=data, timeout=10)
 
             if response.status_code != 200:
+                logger.warning(f"Token refresh failed with status {response.status_code}")
                 return False
 
             new_tokens = response.json()
@@ -466,9 +520,11 @@ class Client(OAuth2Session):
             # Update OAuth2Session token
             self.token = self._credentials
 
+            logger.info("Access token refreshed successfully")
             return True
 
-        except Exception:
+        except (requests.RequestException, json.JSONDecodeError, KeyError, OSError) as e:
+            logger.error(f"Token refresh failed with exception: {e}")
             return False
 
     @staticmethod
@@ -480,10 +536,21 @@ class Client(OAuth2Session):
 
         Returns:
             A dictionary containing the credentials.
+
+        Raises:
+            ValueError: If the string format is invalid or cannot be split properly.
+            AttributeError: If the string lacks expected string methods.
+            KeyError: If required credential keys are missing after parsing.
         """
-        result = dict(map(lambda x: x.split("="), credentials.split("&")))
-        result = Client._check_keys_convert_types(result)
-        return result
+        logger.debug("Parsing credentials string")
+        try:
+            result = dict(map(lambda x: x.split("="), credentials.split("&")))
+            result = Client._check_keys_convert_types(result)
+            logger.debug("Successfully parsed and validated credentials string")
+            return result
+        except (ValueError, AttributeError, KeyError) as e:
+            logger.error(f"Failed to parse credentials string: {e}")
+            raise
 
     @staticmethod
     def _check_keys_convert_types(credentials: dict) -> dict:
@@ -504,13 +571,23 @@ class Client(OAuth2Session):
         """
         missing_keys = [key for key in ["access_token", "token_type", "expires_at"] if key not in credentials]
         if len(missing_keys) > 0:
+            logger.error(f"Credentials missing required keys: {missing_keys}")
             raise ValueError(f"Credentials string is missing required keys: {str(missing_keys)}.")
 
         # Convert expires_at to int
-        credentials["expires_at"] = int(float(credentials["expires_at"]))
+        try:
+            credentials["expires_at"] = int(float(credentials["expires_at"]))
+            logger.debug(f"Credentials expire at timestamp: {credentials['expires_at']}")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Invalid expires_at value: {e}")
+            raise ValueError(f"Invalid expires_at value in credentials: {e}")
 
         # If expires_in is present, convert to int
         if "expires_in" in credentials:
-            credentials["expires_in"] = int(float(credentials["expires_in"]))
+            try:
+                credentials["expires_in"] = int(float(credentials["expires_in"]))
+            except (ValueError, TypeError) as e:
+                logger.error(f"Invalid expires_in value: {e}")
+                raise ValueError(f"Invalid expires_in value in credentials: {e}")
 
         return credentials
