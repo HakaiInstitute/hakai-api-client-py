@@ -47,7 +47,6 @@ select = [
     "N",
     "Q",
     "S",
-    "T",
     "UP",
     "ANN",
     "TC",

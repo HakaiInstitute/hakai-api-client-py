@@ -307,7 +307,7 @@ class Client(OAuth2Session):
         server_error = None
 
         class CallbackHandler(BaseHTTPRequestHandler):
-            def do_GET(handler_self) -> None:
+            def do_GET(handler_self) -> None:  # noqa: N802, N805
                 nonlocal authorization_code, server_error
 
                 parsed_url = urlparse(handler_self.path)
@@ -380,7 +380,7 @@ class Client(OAuth2Session):
                 else:
                     handler_self.send_error(404, "Not found")
 
-            def log_message(self, *args: Any) -> None:
+            def log_message(self, *args: list[Any] | None) -> None:
                 pass  # Suppress logging
 
         # Start server
@@ -413,7 +413,7 @@ class Client(OAuth2Session):
             "redirect_uri": f"http://127.0.0.1:{self._local_port}/callback",
         }
 
-        response = requests.post(token_url, json=data)
+        response = requests.post(token_url, json=data, timeout=10)
 
         if response.status_code != 200:
             error_msg = f"Token exchange failed: {response.status_code}"
@@ -448,7 +448,7 @@ class Client(OAuth2Session):
         }
 
         try:
-            response = requests.post(refresh_url, json=data)
+            response = requests.post(refresh_url, json=data, timeout=10)
 
             if response.status_code != 200:
                 return False
