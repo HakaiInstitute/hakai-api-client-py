@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import os
 from datetime import datetime
 
 from hakai_api import Client
 
 
-def test_get_valid_credentials_from_file():
+def test_get_valid_credentials_from_file() -> None:
     """Test that credentials can be read from a file."""
     # Remove the cached credentials file if it exists
     Client.reset_credentials()
@@ -36,7 +38,7 @@ def test_get_valid_credentials_from_file():
     assert not os.path.exists(client._credentials_file)
 
 
-def test_expired_credentials_are_handled():
+def test_expired_credentials_are_handled() -> None:
     """Test that expired credentials are removed properly."""
     # Remove the cached credentials file if it exists
     Client.reset_credentials()
@@ -62,7 +64,7 @@ def test_expired_credentials_are_handled():
     assert not os.path.exists(client._credentials_file)
 
 
-def test_custom_api_root():
+def test_custom_api_root() -> None:
     """Test that a customized api root can be set."""
     # Remove the cached credentials file if it exists
     Client.reset_credentials()
@@ -83,7 +85,7 @@ def test_custom_api_root():
     assert client.api_root == "https://example.com/api"
 
 
-def test_custom_login_page():
+def test_custom_login_page() -> None:
     """Test that a customized login page can be set."""
     # Remove the cached credentials file if it exists
     Client.reset_credentials()
@@ -104,20 +106,18 @@ def test_custom_login_page():
     assert client.login_page == "https://example.com/login"
 
 
-def test_credentials_from_env_variable():
+def test_credentials_from_env_variable() -> None:
     """Test setting credentials with HAKAI_API_CREDENTIALS environment variable."""
     # Remove the cached credentials file if it exists
     Client.reset_credentials()
 
     # Create a client object
     now = datetime.now()
-    os.environ["HAKAI_API_CREDENTIALS"] = "&".join(
-        [
-            "token_type=Bearer",
-            "access_token=test_access_token",
-            f"expires_at={now.timestamp() + 3600}",
-        ]
-    )
+    os.environ["HAKAI_API_CREDENTIALS"] = "&".join([
+        "token_type=Bearer",
+        "access_token=test_access_token",
+        f"expires_at={now.timestamp() + 3600}",
+    ])
     client = Client()
 
     assert client.credentials is not None
@@ -138,7 +138,7 @@ def test_credentials_from_env_variable():
     del os.environ["HAKAI_API_CREDENTIALS"]
 
 
-def test_user_agent_header():
+def test_user_agent_header() -> None:
     """Test that User-Agent header is correctly set."""
     # Remove the cached credentials file if it exists
     Client.reset_credentials()

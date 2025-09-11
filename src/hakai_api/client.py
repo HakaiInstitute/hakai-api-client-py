@@ -3,21 +3,59 @@
 Supports both web flow (copy/paste credentials) and desktop flow (OAuth with PKCE).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import secrets
 import webbrowser
 from datetime import datetime
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import mktime
-from typing import Dict, Union, Literal, Optional
-from urllib.parse import urlparse, parse_qs
+from typing import Any, Literal
+from urllib.parse import parse_qs, urlparse
 
 import pkce
 from requests_oauthlib import OAuth2Session
 
 
 class Client(OAuth2Session):
+    """Hakai API client for authenticated HTTP requests.
+
+    Extends OAuth2Session to provide authenticated access to the Hakai API
+    resource server. Handles OAuth2 credential management, caching, and
+    automatic token refresh for seamless API interactions.
+
+    The client supports two authentication flows:
+    - Web flow: Copy/paste credentials from a web login page (default)
+    - Desktop flow: OAuth2 with PKCE for native applications
+
+    Credentials are automatically cached to ~/.hakai-api-auth for reuse
+    across sessions until expiry.
+
+    Attributes:
+        DEFAULT_API_ROOT: Default production API base URL.
+        DEFAULT_LOGIN_PAGE: Default production login page URL.
+        CREDENTIALS_ENV_VAR: Environment variable name for credentials.
+        USER_AGENT_ENV_VAR: Environment variable name for User-Agent header.
+
+    Example:
+        Basic usage with default settings:
+
+        >>> client = Client()
+        >>> response = client.get("/eims/views/output/stations")
+
+        Desktop OAuth flow:
+
+        >>> client = Client(auth_flow="desktop")
+        >>> response = client.get("/eims/views/output/stations")
+
+        Custom API endpoint:
+
+        >>> client = Client(api_root="https://custom.api.endpoint")
+        >>> response = client.get("/custom/endpoint")
+    """
+
     _credentials_file = os.path.expanduser("~/.hakai-api-auth")
     DEFAULT_API_ROOT = "https://hecate.hakai.org/api"
     DEFAULT_LOGIN_PAGE = "https://hecate.hakai.org/api-client-login"
@@ -28,23 +66,26 @@ class Client(OAuth2Session):
         self,
         api_root: str = DEFAULT_API_ROOT,
         login_page: str = DEFAULT_LOGIN_PAGE,
-        credentials: Union[str, Dict] = None,
+        credentials: str | dict | None = None,
         auth_flow: Literal["web", "desktop"] = "web",
         local_port: int = 65500,
-    ):
+    ) -> None:
         """Create a new Client class with credentials.
 
-        Params:
+        Args:
             api_root: The base url of the hakai api you want to call.
                 Defaults to the production server.
             login_page: The url of the login page to direct users to.
                 Defaults to the production login page.
-            credentials (str, Dict): Credentials token retrieved from the hakai api
+            credentials: Credentials token retrieved from the hakai api
                 login page. If `None`, loads cached credentials or prompts for log in.
             auth_flow: Authentication flow type - "web" (default, copy/paste) or "desktop" (OAuth with PKCE).
                 Only used if credentials are not provided.
             local_port: Port for local callback server in desktop flow (default 65500).
                 Only used when auth_flow="desktop".
+
+        Raises:
+            ValueError: If credentials are unable to be set.
         """
         self._api_root = api_root
         self._login_page = login_page
@@ -83,7 +124,7 @@ class Client(OAuth2Session):
         self._save_credentials_to_file(self._credentials)
 
         # Init the OAuth2Session parent class with credentials
-        super(Client, self).__init__(token=self._credentials)
+        super().__init__(token=self._credentials)
 
         # Set User-Agent header
         user_agent = os.getenv(self.USER_AGENT_ENV_VAR, "hakai-api-client-py")
@@ -91,38 +132,67 @@ class Client(OAuth2Session):
 
     @property
     def api_root(self) -> str:
-        """Return the api base url."""
+        """Return the api base url.
+
+        Returns:
+            The base URL of the Hakai API.
+        """
         return self._api_root
 
     @property
     def login_page(self) -> str:
-        """Return the login page url."""
+        """Return the login page url.
+
+        Returns:
+            The URL of the login page.
+        """
         return self._login_page
 
     @property
-    def credentials(self) -> Dict:
-        """Return the credentials object."""
+    def credentials(self) -> dict:
+        """Return the credentials object.
+
+        Returns:
+            Credentials object.
+
+        Raises:
+            ValueError: If credentials are not provided.
+        """
         if self._credentials is None:
             raise ValueError("Credentials have not been set.")
         return self._credentials
 
     @classmethod
-    def reset_credentials(cls):
-        """Remove the cached credentials file."""
+    def reset_credentials(cls) -> None:
+        """Remove the cached credentials file.
+
+        Deletes the credentials file from the filesystem if it exists.
+        """
         if os.path.isfile(cls._credentials_file):
             os.remove(cls._credentials_file)
 
-    def _save_credentials_to_file(self, credentials: Dict):
-        """Save the credentials object to a file."""
+    def _save_credentials_to_file(self, credentials: dict) -> None:
+        """Save the credentials object to a file.
+
+        Args:
+            credentials: Credentials object.
+        """
         with open(self._credentials_file, "w") as outfile:
             json.dump(credentials, outfile)
 
     @classmethod
     def file_credentials_are_valid(cls) -> bool:
-        """Check if the cached credentials exist and are valid."""
+        """Check if the cached credentials exist and are valid.
+
+        Validates that the credentials file exists, can be parsed,
+        contains required fields, and has not expired.
+
+        Returns:
+            True if the credentials are valid, False otherwise.
+        """
         if not os.path.isfile(cls._credentials_file):
             return False
-        with open(cls._credentials_file, "r"):
+        with open(cls._credentials_file):
             try:
                 credentials = cls._get_credentials_from_file()
                 expires_at = credentials["expires_at"]
@@ -130,12 +200,7 @@ class Client(OAuth2Session):
                 os.remove(cls._credentials_file)
                 return False
 
-            now = int(
-                (
-                    mktime(datetime.now().timetuple())
-                    + datetime.now().microsecond / 1000000.0
-                )
-            )  # utc timestamp
+            now = int(mktime(datetime.now().timetuple()) + datetime.now().microsecond / 1000000.0)  # utc timestamp
 
         if now > expires_at:
             cls.reset_credentials()
@@ -144,27 +209,42 @@ class Client(OAuth2Session):
         return True
 
     @classmethod
-    def _get_credentials_from_file(cls) -> Dict:
-        """Get user credentials from a cached file."""
-        with open(cls._credentials_file, "r") as infile:
+    def _get_credentials_from_file(cls) -> dict:
+        """Get user credentials from a cached file.
+
+        Loads and validates credentials from the cached credentials file.
+
+        Returns:
+            A dict containing the credentials with required keys and proper types.
+        """
+        with open(cls._credentials_file) as infile:
             result = json.load(infile)
         result = Client._check_keys_convert_types(result)
         return result
 
-    def _get_credentials_from_web(self) -> Dict:
-        """Get user credentials from a web sign-in."""
-        print("Please go here and authorize:")
-        print(self.login_page, flush=True)
+    def _get_credentials_from_web(self) -> dict:
+        """Get user credentials from a web sign-in.
+
+        Prompts the user to copy and paste credentials from the login page.
+
+        Returns:
+            A dict containing the credentials parsed from user input.
+        """
         response = input("\nCopy and paste your credentials from the login page:\n")
 
         # Reformat response to dict
         credentials = dict(map(lambda x: x.split("="), response.split("&")))
         return credentials
 
-    def _get_credentials_from_desktop_oauth(self) -> Dict:
-        """Get user credentials using desktop OAuth flow with PKCE."""
-        print("Starting desktop OAuth authentication flow...")
+    def _get_credentials_from_desktop_oauth(self) -> dict:
+        """Get user credentials using desktop OAuth flow with PKCE.
 
+        Returns:
+            A dict containing the credentials.
+
+        Raises:
+            ValueError: If credentials could not be loaded.
+        """
         # Generate PKCE parameters
         self._code_verifier, code_challenge = pkce.generate_pkce_pair()
 
@@ -184,19 +264,15 @@ class Client(OAuth2Session):
         # Use the desktop auth endpoint
         auth_url = f"{self._api_root}/auth/desktop?{urlencode(params)}"
 
-        print("Opening browser for authentication...")
-        print(f"If browser doesn't open, visit: {auth_url}")
         webbrowser.open(auth_url)
 
         # Start local server to receive callback
-        print(f"Waiting for authorization on port {self._local_port}...")
         self._authorization_code = self._wait_for_callback()
 
         if not self._authorization_code:
             raise ValueError("Failed to receive authorization code")
 
         # Exchange code for tokens
-        print("Exchanging authorization code for tokens...")
         tokens = self._exchange_code_for_tokens()
 
         # Convert desktop token response to match web format
@@ -211,16 +287,27 @@ class Client(OAuth2Session):
         if "refresh_token" in tokens:
             credentials["refresh_token"] = tokens["refresh_token"]
 
-        print("Authentication successful!")
         return credentials
 
-    def _wait_for_callback(self) -> Optional[str]:
-        """Start a local HTTP server to receive the OAuth callback."""
+    def _wait_for_callback(self) -> str | None:
+        """Start a local HTTP server to receive the OAuth callback.
+
+        Starts a local HTTP server on the configured port to handle the OAuth
+        callback redirect. Validates the state parameter and extracts the
+        authorization code from the callback parameters.
+
+        Returns:
+            The authorization code from the OAuth callback.
+
+        Raises:
+            ValueError: If state mismatch occurs, OAuth error is returned,
+                or no authorization code is received.
+        """
         authorization_code = None
         server_error = None
 
         class CallbackHandler(BaseHTTPRequestHandler):
-            def do_GET(handler_self):
+            def do_GET(handler_self) -> None:
                 nonlocal authorization_code, server_error
 
                 parsed_url = urlparse(handler_self.path)
@@ -293,7 +380,7 @@ class Client(OAuth2Session):
                 else:
                     handler_self.send_error(404, "Not found")
 
-            def log_message(self, *args):
+            def log_message(self, *args: Any) -> None:
                 pass  # Suppress logging
 
         # Start server
@@ -307,8 +394,16 @@ class Client(OAuth2Session):
 
         return authorization_code
 
-    def _exchange_code_for_tokens(self) -> Dict:
-        """Exchange authorization code for tokens using the desktop endpoint."""
+    def _exchange_code_for_tokens(self) -> dict:
+        """Exchange authorization code for tokens using the desktop endpoint.
+
+        Returns:
+            A dictionary containing the authorization code (JWT token).
+
+        Raises:
+            ValueError: If the authorization code is invalid.
+
+        """
         import requests
 
         token_url = f"{self._api_root}/auth/desktop/token"
@@ -334,8 +429,12 @@ class Client(OAuth2Session):
     def refresh_token(self) -> bool:
         """Refresh the access token using the refresh token.
 
+        Uses the stored refresh token to obtain a new access token from
+        the API. Updates the stored credentials and OAuth2Session token
+        if successful.
+
         Returns:
-            True if refresh successful, False otherwise
+            True if refresh successful, False otherwise.
         """
         if "refresh_token" not in self._credentials:
             return False
@@ -373,24 +472,39 @@ class Client(OAuth2Session):
             return False
 
     @staticmethod
-    def _parse_credentials_string(credentials: str) -> Dict:
-        """Parse a credentials string into a dictionary."""
+    def _parse_credentials_string(credentials: str) -> dict:
+        """Parse a credentials string into a dictionary.
+
+        Args:
+            credentials: The credentials string.
+
+        Returns:
+            A dictionary containing the credentials.
+        """
         result = dict(map(lambda x: x.split("="), credentials.split("&")))
         result = Client._check_keys_convert_types(result)
         return result
 
     @staticmethod
     def _check_keys_convert_types(credentials: dict) -> dict:
-        """Check that the credentials dict has the required keys and convert types."""
-        missing_keys = [
-            key
-            for key in ["access_token", "token_type", "expires_at"]
-            if key not in credentials
-        ]
+        """Check and clean the credentials.
+
+        Validates that required keys are present and converts string values
+        to appropriate types (expires_at and expires_in to integers).
+
+        Args:
+            credentials: credentials dictionary to validate and clean.
+
+        Returns:
+            updated credentials dictionary with proper types.
+
+        Raises:
+            ValueError: if required keys (access_token, token_type, expires_at)
+                are missing from the credentials dictionary.
+        """
+        missing_keys = [key for key in ["access_token", "token_type", "expires_at"] if key not in credentials]
         if len(missing_keys) > 0:
-            raise ValueError(
-                f"Credentials string is missing required keys: {str(missing_keys)}."
-            )
+            raise ValueError(f"Credentials string is missing required keys: {str(missing_keys)}.")
 
         # Convert expires_at to int
         credentials["expires_at"] = int(float(credentials["expires_at"]))
