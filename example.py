@@ -3,12 +3,12 @@
 from hakai_api import Client
 
 if __name__ == "__main__":
-    # Get the api request client
+    # WEB FLOW (default)
     client = Client()
+    response = client.get(f"{client.api_root}/whoami")
+    print(response.json())
 
-    # Make a data request for sampling stations
-    url = "%s/%s" % (client.api_root, "/aco/views/projects/phases")
-    response = client.get(url)
-
-    print(url)
+    # DESKTOP FLOW
+    client = Client(auth_flow="desktop")  # Follow the prompts in the webpage that opens
+    response = client.get(f"{client.api_root}/whoami")
     print(response.json())
