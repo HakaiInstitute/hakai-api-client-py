@@ -20,7 +20,7 @@ and test the code, and deploy a new version.
 ## Project structure
 
 The business logic for this package is located
-in [`src/hakai_api/Client.py`](src/hakai_api/Client.py).
+in [`src/hakai_api/Client.py`](src/hakai_api/client.py).
 All tests are located in the `tests/` directory.
 
 ## Configuration
