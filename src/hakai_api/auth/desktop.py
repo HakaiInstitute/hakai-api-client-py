@@ -271,45 +271,9 @@ class DesktopAuthStrategy(AuthStrategy):
         logger.info("Successfully exchanged authorization code for tokens")
         return response.json()
 
-    def refresh_token(self, credentials: dict) -> dict | None:
-        """Refresh the access token using the refresh token.
+    @property
+    def client_type(self) -> str:
+        """Get the client type for desktop authentication strategy."""
+        return "desktop"
 
-        Args:
-            credentials: Current credentials dictionary containing refresh_token.
-
-        Returns:
-            Updated credentials dictionary if successful, None otherwise.
-        """
-        if "refresh_token" not in credentials:
-            logger.debug("No refresh token available, cannot refresh")
-            return None
-
-        logger.debug("Attempting to refresh access token")
-
-        refresh_url = f"{self.api_root}/auth/refresh"
-        data = {
-            "refresh_token": credentials["refresh_token"],
-            "client_type": "desktop",
-        }
-
-        try:
-            response = requests.post(refresh_url, json=data, timeout=10)
-
-            if response.status_code != 200:
-                logger.warning(f"Token refresh failed with status {response.status_code}")
-                return None
-
-            new_tokens = response.json()
-
-            # Update credentials
-            updated_credentials = credentials.copy()
-            updated_credentials["access_token"] = new_tokens["access_token"]
-            updated_credentials["expires_at"] = new_tokens["expires_at"]
-            updated_credentials["expires_in"] = new_tokens["expires_in"]
-
-            logger.info("Access token refreshed successfully")
-            return updated_credentials
-
-        except (requests.RequestException, json.JSONDecodeError, KeyError) as e:
-            logger.error(f"Token refresh failed with exception: {e}")
-            return None
+    # refresh_token method is now inherited from AuthStrategy base class

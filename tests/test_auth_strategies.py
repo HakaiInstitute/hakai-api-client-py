@@ -25,6 +25,11 @@ class ConcreteAuthStrategy(AuthStrategy):
             "expires_in": 3600,
         }
 
+    @property
+    def client_type(self) -> str:
+        """Get the client type for test strategy."""
+        return "test"
+
 
 @pytest.fixture
 def temp_credentials_file() -> Generator[str, None, None]:
