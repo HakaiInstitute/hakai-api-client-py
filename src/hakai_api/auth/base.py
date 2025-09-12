@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -91,8 +91,10 @@ class AuthStrategy(ABC):
                 pass  # File might already be gone
             return False
 
-        now_utc = datetime.now(timezone.utc)
-        now = int(now_utc.timestamp())  # Use UTC timestamp instead of mktime
+        # Use the same timestamp logic as the original Client class
+        from time import mktime
+
+        now = int(mktime(datetime.now().timetuple()) + datetime.now().microsecond / 1000000.0)
 
         if now > expires_at:
             logger.info("Cached credentials have expired, removing")
@@ -190,8 +192,10 @@ class AuthStrategy(ABC):
             if expires_at is None:
                 return False  # If no expiry, assume valid
 
-            now_utc = datetime.now(timezone.utc)
-            now = int(now_utc.timestamp())  # Use UTC timestamp instead of mktime
+            # Use the same timestamp logic as the original Client class
+            from time import mktime
+
+            now = int(mktime(datetime.now().timetuple()) + datetime.now().microsecond / 1000000.0)
             return now > expires_at
         except (TypeError, ValueError):
             return True  # If we can't parse the expiry, consider it expired
