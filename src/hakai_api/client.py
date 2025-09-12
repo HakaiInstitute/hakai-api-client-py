@@ -258,6 +258,30 @@ class Client(OAuth2Session):
         )
 
     # Backward compatibility methods
+    def _get_credentials_from_web(self) -> dict:
+        """Backward compatibility method for getting credentials from web prompt."""
+        if not isinstance(self._auth_strategy, WebAuthStrategy):
+            raise TypeError("_get_credentials_from_web is only available for 'web' auth_flow")
+        return self._auth_strategy._get_credentials_from_web_input()
+
+    def _save_credentials_to_file(self, credentials: dict) -> None:
+        """Backward compatibility method for saving credentials to file."""
+        self._auth_strategy.save_credentials_to_file(credentials)
+
+    @staticmethod
+    def _parse_credentials_string(credentials: str) -> dict:
+        """Backward compatibility for parsing credentials string."""
+        # Use a temporary strategy instance to parse
+        temp_strategy = WebAuthStrategy("", "")
+        return temp_strategy.parse_credentials_string(credentials)
+
+    @staticmethod
+    def _check_keys_convert_types(credentials: dict) -> dict:
+        """Backward compatibility for checking keys and converting types."""
+        # Use a temporary strategy instance
+        temp_strategy = WebAuthStrategy("", "")
+        return temp_strategy._check_keys_convert_types(credentials)
+
     @property
     def _credentials_file(self) -> str:
         """Backward compatibility property for credentials file path.
