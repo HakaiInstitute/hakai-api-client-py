@@ -42,7 +42,8 @@ class Client(OAuth2Session):
 
         env_credentials = os.getenv(self.CREDENTIALS_ENV_VAR, None)
         if isinstance(credentials, dict):
-            self._credentials = credentials
+            # When passed a dict, ensure types are correct
+            self._credentials = Client._check_keys_convert_types(credentials)
         elif isinstance(credentials, str):
             # Parse credentials from string
             self._credentials = self._parse_credentials_string(credentials)
@@ -61,7 +62,7 @@ class Client(OAuth2Session):
 
         # Init the OAuth2Session parent class with credentials
         super(Client, self).__init__(token=self._credentials)
-        
+
         # Set User-Agent header
         user_agent = os.getenv(self.USER_AGENT_ENV_VAR, "hakai-api-client-py")
         self.headers.update({"User-Agent": user_agent})
@@ -99,20 +100,23 @@ class Client(OAuth2Session):
         """Check if the cached credentials exist and are valid."""
         if not os.path.isfile(cls._credentials_file):
             return False
-        with open(cls._credentials_file, "r"):
-            try:
-                credentials = cls._get_credentials_from_file()
-                expires_at = credentials["expires_at"]
-            except (KeyError, ValueError):
-                os.remove(cls._credentials_file)
-                return False
 
-            now = int(
-                (
-                    mktime(datetime.now().timetuple())
-                    + datetime.now().microsecond / 1000000.0
-                )
-            )  # utc timestamp
+        try:
+            # Consolidate file reading and validation logic
+            credentials = cls._get_credentials_from_file()
+            expires_at = credentials["expires_at"]  # Potential KeyError
+        except (json.JSONDecodeError, KeyError, ValueError):
+            # Catch bad JSON, missing keys, or type conversion errors from helpers.
+            # Any of these errors means the file is invalid.
+            os.remove(cls._credentials_file)
+            return False
+
+        now = int(
+            (
+                mktime(datetime.now().timetuple())
+                + datetime.now().microsecond / 1000000.0
+            )
+        )
 
         if now > expires_at:
             cls.reset_credentials()
@@ -124,18 +128,27 @@ class Client(OAuth2Session):
     def _get_credentials_from_file(cls) -> Dict:
         """Get user credentials from a cached file."""
         with open(cls._credentials_file, "r") as infile:
-            result = json.load(infile)
-        result = Client._check_keys_convert_types(result)
+            result = json.load(infile)  # Can raise json.JSONDecodeError
+        result = Client._check_keys_convert_types(
+            result
+        )  # Can raise ValueError/KeyError
         return result
 
     def _get_credentials_from_web(self) -> Dict:
-        """Get user credentials from a web sign-in."""
+        """Get user credentials from a web sign-in.
+
+        This method now correctly validates and converts types from the input string.
+        """
         print("Please go here and authorize:")
         print(self.login_page, flush=True)
         response = input("\nCopy and past your credentials from the login page:\n")
 
         # Reformat response to dict
         credentials = dict(map(lambda x: x.split("="), response.split("&")))
+
+        # Ensure web credentials get the same validation and type conversion.
+        credentials = Client._check_keys_convert_types(credentials)
+
         return credentials
 
     @staticmethod
