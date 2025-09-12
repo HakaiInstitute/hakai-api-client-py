@@ -1,6 +1,5 @@
 """Hakai API Python Client."""
 
-import json
 import os
 from typing import Any, Literal
 
@@ -102,7 +101,11 @@ class Client(OAuth2Session):
         else:
             # Use strategy to get credentials (handles env vars and cached credentials properly)
             logger.info(f"No credentials provided, using {auth_flow} authentication strategy")
-            self._credentials = self._auth_strategy.get_credentials()
+            try:
+                self._credentials = self._auth_strategy.get_credentials()
+            except Exception as e:
+                logger.error(f"Failed to get credentials from strategy: {e}")
+                self._credentials = None
 
         if self._credentials is None:
             logger.error("Failed to obtain valid credentials from any source")
@@ -158,12 +161,9 @@ class Client(OAuth2Session):
 
         Deletes the credentials file from the filesystem if it exists.
         """
-        credentials_file = os.path.expanduser("~/.hakai-api-auth")
-        if os.path.isfile(credentials_file):
-            logger.info("Removing cached credentials file")
-            os.remove(credentials_file)
-        else:
-            logger.debug("No cached credentials file to remove")
+        # Use a temporary strategy instance to reset credentials
+        temp_strategy = WebAuthStrategy(cls.DEFAULT_API_ROOT, cls.DEFAULT_LOGIN_PAGE)
+        temp_strategy.reset_credentials()
 
     @classmethod
     def file_credentials_are_valid(cls) -> bool:
@@ -195,51 +195,18 @@ class Client(OAuth2Session):
 
         logger.debug("Attempting to refresh access token using auth strategy")
 
-        # Desktop strategy has its own refresh method
-        if isinstance(self._auth_strategy, DesktopAuthStrategy):
+        # All strategies that support refresh tokens should have a refresh_token method
+        if hasattr(self._auth_strategy, "refresh_token"):
             updated_credentials = self._auth_strategy.refresh_token(self._credentials)
             if updated_credentials:
                 self._credentials = updated_credentials
                 self._auth_strategy.save_credentials_to_file(self._credentials)
                 self.token = self._credentials
+                logger.info("Access token refreshed successfully")
                 return True
-            return False
 
-        # Web flow refresh (using generic approach)
-        import requests
-
-        refresh_url = f"{self._api_root}/auth/refresh"
-        data = {
-            "refresh_token": self._credentials["refresh_token"],
-            "client_type": "web",
-        }
-
-        try:
-            response = requests.post(refresh_url, json=data, timeout=10)
-
-            if response.status_code != 200:
-                logger.warning(f"Token refresh failed with status {response.status_code}")
-                return False
-
-            new_tokens = response.json()
-
-            # Update credentials
-            self._credentials["access_token"] = new_tokens["access_token"]
-            self._credentials["expires_at"] = new_tokens["expires_at"]
-            self._credentials["expires_in"] = new_tokens["expires_in"]
-
-            # Save updated credentials
-            self._auth_strategy.save_credentials_to_file(self._credentials)
-
-            # Update OAuth2Session token
-            self.token = self._credentials
-
-            logger.info("Access token refreshed successfully")
-            return True
-
-        except (requests.RequestException, json.JSONDecodeError, KeyError, OSError) as e:
-            logger.error(f"Token refresh failed with exception: {e}")
-            return False
+        logger.warning("Token refresh failed or is not supported by the current auth strategy")
+        return False
 
     # Factory methods for easy client creation
     @classmethod
