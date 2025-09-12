@@ -62,7 +62,16 @@ def mock_home_dir(tmp_path, monkeypatch):
     This prevents tests from interacting with the actual ~/.hakai-api-auth file.
     """
     mock_creds_file = tmp_path / ".hakai-api-auth"
-    monkeypatch.setattr(Client, "_credentials_file", str(mock_creds_file))
+
+    # Patch the AuthStrategy base class to use the mock credentials file
+    from hakai_api.auth.base import AuthStrategy
+
+    def mock_init(self, api_root, login_page, **kwargs):
+        self.api_root = api_root
+        self.login_page = login_page
+        self.credentials_file = str(mock_creds_file)
+
+    monkeypatch.setattr(AuthStrategy, "__init__", mock_init)
     return str(mock_creds_file)
 
 
@@ -172,61 +181,83 @@ class TestInitialization:
 
 
 class TestStaticAndClassMethods:
-    def test_parse_credentials_string(self):
+    def test_parse_credentials_string(self, mocker, valid_credentials_dict):
+        # Create a client instance to test the instance method
+        client = Client(credentials=valid_credentials_dict)
         cred_str = "access_token=token&token_type=bearer&expires_at=1618956241.123&expires_in=3600.0"
-        result = Client._parse_credentials_string(cred_str)
+        result = client._parse_credentials_string(cred_str)
         assert result["access_token"] == "token"
         assert result["expires_at"] == 1618956241
         assert isinstance(result["expires_at"], int)
         assert result["expires_in"] == 3600
         assert isinstance(result["expires_in"], int)
 
-    def test_check_keys_convert_types_missing_key(self):
+    def test_check_keys_convert_types_missing_key(self, mocker, valid_credentials_dict):
+        # Create a client instance to test the instance method
+        client = Client(credentials=valid_credentials_dict)
         bad_creds = {"access_token": "token"}
         with pytest.raises(ValueError) as excinfo:
-            Client._check_keys_convert_types(bad_creds)
+            client._check_keys_convert_types(bad_creds)
         assert "missing required keys" in str(excinfo.value)
 
     @freeze_time(datetime.now())
-    def test_file_credentials_are_valid(self, mock_home_dir, valid_credentials_dict):
+    def test_file_credentials_are_valid(self, mocker, mock_home_dir, valid_credentials_dict):
+        # Create a client instance to test the instance method
+        client = Client(credentials=valid_credentials_dict)
         with open(mock_home_dir, "w") as f:
             json.dump(valid_credentials_dict, f)
-        assert Client.file_credentials_are_valid() is True
+        assert client.file_credentials_are_valid() is True
 
     @freeze_time(datetime.now())
-    def test_file_credentials_are_not_valid_if_expired(self, mock_home_dir, expired_credentials_dict):
+    def test_file_credentials_are_not_valid_if_expired(
+        self, mocker, mock_home_dir, expired_credentials_dict, valid_credentials_dict
+    ):
+        # Create a client instance to test the instance method
+        client = Client(credentials=valid_credentials_dict)
         with open(mock_home_dir, "w") as f:
             json.dump(expired_credentials_dict, f)
-        assert Client.file_credentials_are_valid() is False
+        assert client.file_credentials_are_valid() is False
         assert not os.path.exists(mock_home_dir)
 
-    def test_file_credentials_are_not_valid_if_no_file(self, mock_home_dir):
-        assert Client.file_credentials_are_valid() is False
+    def test_file_credentials_are_not_valid_if_no_file(self, mocker, mock_home_dir, valid_credentials_dict):
+        # Create a client instance to test the instance method
+        client = Client(credentials=valid_credentials_dict)
+        # Remove the credentials file that was created during initialization
+        os.remove(mock_home_dir)
+        assert client.file_credentials_are_valid() is False
 
-    def test_file_credentials_are_not_valid_if_malformed(self, mock_home_dir):
+    def test_file_credentials_are_not_valid_if_malformed(self, mocker, mock_home_dir, valid_credentials_dict):
+        # Create a client instance to test the instance method
+        client = Client(credentials=valid_credentials_dict)
         with open(mock_home_dir, "w") as f:
             f.write('{"access_token": "token"}')
-        assert Client.file_credentials_are_valid() is False
+        assert client.file_credentials_are_valid() is False
         assert not os.path.exists(mock_home_dir)
 
         with open(mock_home_dir, "w") as f:
             f.write("this is not json")
-        assert Client.file_credentials_are_valid() is False
+        assert client.file_credentials_are_valid() is False
         assert not os.path.exists(mock_home_dir)
 
-    def test_reset_credentials(self, mock_home_dir):
+    def test_reset_credentials(self, mocker, mock_home_dir, valid_credentials_dict):
+        # Create a client instance to test the instance method
+        client = Client(credentials=valid_credentials_dict)
         with open(mock_home_dir, "w") as f:
             f.write("dummy content")
         assert os.path.exists(mock_home_dir)
-        Client.reset_credentials()
+        client.reset_credentials()
         assert not os.path.exists(mock_home_dir)
 
-    def test_reset_credentials_no_file(self, mock_home_dir):
+    def test_reset_credentials_no_file(self, mocker, mock_home_dir, valid_credentials_dict):
+        # Create a client instance to test the instance method
+        client = Client(credentials=valid_credentials_dict)
+        # Remove the credentials file that was created during initialization
+        os.remove(mock_home_dir)
         assert not os.path.exists(mock_home_dir)
         try:
-            Client.reset_credentials()
+            client.reset_credentials()
         except OSError:
-            pytest.fail("Client.reset_credentials() raised an unexpected error.")
+            pytest.fail("client.reset_credentials() raised an unexpected error.")
 
 
 class TestInternalMethods:
@@ -239,9 +270,11 @@ class TestInternalMethods:
         assert isinstance(creds["expires_at"], int)
 
     def test_get_credentials_from_file(self, mock_home_dir, valid_credentials_dict):
+        # Create a client instance to test the instance method
+        client = Client(credentials=valid_credentials_dict)
         with open(mock_home_dir, "w") as f:
             json.dump(valid_credentials_dict, f)
-        creds = Client._get_credentials_from_file()
+        creds = client._get_credentials_from_file()
         assert creds == valid_credentials_dict
 
     def test_save_credentials_to_file(self, mock_home_dir, valid_credentials_dict):

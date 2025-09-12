@@ -17,7 +17,8 @@ from src.hakai_api.auth.web import WebAuthStrategy
 def test_get_valid_credentials_from_file():
     """Test that credentials can be read from a file."""
     # Remove the cached credentials file if it exists
-    Client.reset_credentials()
+    temp_client = Client(credentials={"access_token": "temp", "token_type": "Bearer", "expires_at": 9999999999})
+    temp_client.reset_credentials()
 
     # Create a client object
     now = datetime.now(timezone.utc)
@@ -41,7 +42,7 @@ def test_get_valid_credentials_from_file():
     assert credentials is not None
 
     # Check that credentials can be deleted
-    Client.reset_credentials()
+    client.reset_credentials()
     assert not client.file_credentials_are_valid()
     assert not os.path.exists(client._credentials_file)
 
@@ -49,7 +50,8 @@ def test_get_valid_credentials_from_file():
 def test_expired_credentials_are_handled():
     """Test that expired credentials are removed properly."""
     # Remove the cached credentials file if it exists
-    Client.reset_credentials()
+    temp_client = Client(credentials={"access_token": "temp", "token_type": "Bearer", "expires_at": 9999999999})
+    temp_client.reset_credentials()
 
     # Create a client object
     now = datetime.now(timezone.utc)
@@ -75,7 +77,8 @@ def test_expired_credentials_are_handled():
 def test_custom_api_root():
     """Test that a customized api root can be set."""
     # Remove the cached credentials file if it exists
-    Client.reset_credentials()
+    temp_client = Client(credentials={"access_token": "temp", "token_type": "Bearer", "expires_at": 9999999999})
+    temp_client.reset_credentials()
 
     # Create a client object
     now = datetime.now(timezone.utc)
@@ -96,7 +99,8 @@ def test_custom_api_root():
 def test_custom_login_page():
     """Test that a customized login page can be set."""
     # Remove the cached credentials file if it exists
-    Client.reset_credentials()
+    temp_client = Client(credentials={"access_token": "temp", "token_type": "Bearer", "expires_at": 9999999999})
+    temp_client.reset_credentials()
 
     # Create a client object
     now = datetime.now(timezone.utc)
@@ -117,7 +121,8 @@ def test_custom_login_page():
 def test_credentials_from_env_variable():
     """Test setting credentials with HAKAI_API_CREDENTIALS environment variable."""
     # Remove the cached credentials file if it exists
-    Client.reset_credentials()
+    temp_client = Client(credentials={"access_token": "temp", "token_type": "Bearer", "expires_at": 9999999999})
+    temp_client.reset_credentials()
 
     # Create a client object
     now = datetime.now(timezone.utc)
@@ -139,7 +144,7 @@ def test_credentials_from_env_variable():
     assert credentials is not None
 
     # Check that credentials can be deleted
-    Client.reset_credentials()
+    client.reset_credentials()
     assert not client.file_credentials_are_valid()
     assert not os.path.exists(client._credentials_file)
 
@@ -150,7 +155,8 @@ def test_credentials_from_env_variable():
 def test_user_agent_header():
     """Test that User-Agent header is correctly set."""
     # Remove the cached credentials file if it exists
-    Client.reset_credentials()
+    temp_client = Client(credentials={"access_token": "temp", "token_type": "Bearer", "expires_at": 9999999999})
+    temp_client.reset_credentials()
 
     # Make sure environment variable is not set for this test
     if Client.USER_AGENT_ENV_VAR in os.environ:
