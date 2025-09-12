@@ -10,6 +10,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import pkce
+import requests
 
 from .base import AuthStrategy
 
@@ -248,8 +249,6 @@ class DesktopAuthStrategy(AuthStrategy):
         Raises:
             ValueError: If the authorization code is invalid.
         """
-        import requests
-
         token_url = f"{self.api_root}/auth/desktop/token"
         data = {
             "code": self._authorization_code,
@@ -286,8 +285,6 @@ class DesktopAuthStrategy(AuthStrategy):
             return None
 
         logger.debug("Attempting to refresh access token")
-
-        import requests
 
         refresh_url = f"{self.api_root}/auth/refresh"
         data = {

@@ -5,6 +5,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime
+from time import mktime
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +91,6 @@ class AuthStrategy(ABC):
             except OSError:
                 pass  # File might already be gone
             return False
-
-        # Use the same timestamp logic as the original Client class
-        from time import mktime
 
         now = int(mktime(datetime.now().timetuple()) + datetime.now().microsecond / 1000000.0)
 
@@ -191,9 +189,6 @@ class AuthStrategy(ABC):
             expires_at = credentials.get("expires_at")
             if expires_at is None:
                 return False  # If no expiry, assume valid
-
-            # Use the same timestamp logic as the original Client class
-            from time import mktime
 
             now = int(mktime(datetime.now().timetuple()) + datetime.now().microsecond / 1000000.0)
             return now > expires_at

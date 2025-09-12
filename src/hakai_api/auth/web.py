@@ -4,6 +4,8 @@ import json
 import logging
 import os
 
+import requests
+
 from .base import AuthStrategy
 
 logger = logging.getLogger(__name__)
@@ -89,8 +91,6 @@ class WebAuthStrategy(AuthStrategy):
             return None
 
         logger.debug("Attempting to refresh access token")
-
-        import requests
 
         refresh_url = f"{self.api_root}/auth/refresh"
         data = {
