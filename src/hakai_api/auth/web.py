@@ -1,5 +1,6 @@
 """Web authentication strategy using copy/paste credentials."""
 
+import json
 import logging
 import os
 
@@ -59,9 +60,9 @@ class WebAuthStrategy(AuthStrategy):
             ValueError: If the input format is invalid or cannot be split properly.
             AttributeError: If the input string lacks expected string methods.
         """
-        logger.info(f"Please visit the login page: {self.login_page}")
-        print(f"\nPlease visit the login page: {self.login_page}")
-        response = input("Copy and paste your credentials from the login page:\n")
+        logger.info(f"Please go here and authorize: {self.login_page}")
+        print(f"Please go here and authorize: {self.login_page}")
+        response = input("\nCopy and paste your credentials from the login page here and press <enter>:\n")
 
         logger.debug("Parsing credentials from user input")
         try:
@@ -73,3 +74,48 @@ class WebAuthStrategy(AuthStrategy):
         except (ValueError, AttributeError) as e:
             logger.error(f"Failed to parse credentials from input: {e}")
             raise
+
+    def refresh_token(self, credentials: dict) -> dict | None:
+        """Refresh the access token using the refresh token.
+
+        Args:
+            credentials: Current credentials dictionary containing refresh_token.
+
+        Returns:
+            Updated credentials dictionary if successful, None otherwise.
+        """
+        if "refresh_token" not in credentials:
+            logger.debug("No refresh token available, cannot refresh")
+            return None
+
+        logger.debug("Attempting to refresh access token")
+
+        import requests
+
+        refresh_url = f"{self.api_root}/auth/refresh"
+        data = {
+            "refresh_token": credentials["refresh_token"],
+            "client_type": "web",
+        }
+
+        try:
+            response = requests.post(refresh_url, json=data, timeout=10)
+
+            if response.status_code != 200:
+                logger.warning(f"Token refresh failed with status {response.status_code}")
+                return None
+
+            new_tokens = response.json()
+
+            # Update credentials
+            updated_credentials = credentials.copy()
+            updated_credentials["access_token"] = new_tokens["access_token"]
+            updated_credentials["expires_at"] = new_tokens["expires_at"]
+            updated_credentials["expires_in"] = new_tokens["expires_in"]
+
+            logger.info("Access token refreshed successfully")
+            return updated_credentials
+
+        except (requests.RequestException, json.JSONDecodeError, KeyError) as e:
+            logger.error(f"Token refresh failed with exception: {e}")
+            return None
