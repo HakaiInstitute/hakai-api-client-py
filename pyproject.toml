@@ -61,6 +61,9 @@ select = [
     "S101",  # Ignore use of assert in tests
     "N999",  # Invalid module name
     "D",     # Docstrings
+    "ANN",   # Type annotations - not critical for tests
+    "S105",  # Hardcoded password strings - acceptable in test files
+    "DOC",   # Doc strings - already disabled D for docstrings
 ]
 
 [tool.ruff.lint.pydocstyle]
