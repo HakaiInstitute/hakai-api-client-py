@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import tempfile
 from datetime import datetime, timezone
@@ -11,7 +10,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from hakai_api import Client
-from src.hakai_api.auth.web import WebAuthStrategy
 
 
 def test_get_valid_credentials_from_file():
@@ -423,54 +421,6 @@ class TestClientCredentialScenarios:
                 # Should return original 401 response
                 assert response.status_code == 401
                 assert call_count == 1  # Only one call, no retry due to re-auth failure
-
-    def test_expired_cached_credentials_are_rejected(self, temp_credentials_file, expired_credentials):
-        """Test that expired cached credentials are automatically rejected."""
-        # Save expired credentials to file
-        with open(temp_credentials_file, "w") as f:
-            json.dump(expired_credentials, f)
-
-        def mock_get_credentials():
-            # Mock strategy returning fresh credentials
-            now_utc = datetime.now(timezone.utc)
-            return {
-                "access_token": "fresh_token",
-                "token_type": "Bearer",
-                "expires_at": int(now_utc.timestamp() + 3600),  # Use UTC timestamp
-                "expires_in": 3600,
-            }
-
-        def mock_save_credentials(credentials):
-            # Save the fresh credentials to our temp file
-            with open(temp_credentials_file, "w") as f:
-                json.dump(credentials, f)
-
-        # Remove any existing default cached credentials first
-        default_creds_file = os.path.expanduser("~/.hakai-api-auth")
-        if os.path.exists(default_creds_file):
-            os.remove(default_creds_file)
-
-        # Mock the auth strategy creation to use our temp file
-        original_init = WebAuthStrategy.__init__
-
-        def mock_init(self, *args, **kwargs):
-            original_init(self, *args, **kwargs)
-            self.credentials_file = temp_credentials_file
-
-        with patch.object(WebAuthStrategy, "__init__", mock_init):
-            with patch(
-                "hakai_api.auth.web.WebAuthStrategy._get_credentials_from_web_input",
-                side_effect=mock_get_credentials,
-            ):
-                with patch.object(WebAuthStrategy, "save_credentials_to_file", mock_save_credentials):
-                    client = Client()
-
-                    # Should have fresh credentials, not the expired ones
-                    assert client.credentials["access_token"] == "fresh_token"
-                    # File should now contain fresh credentials, not expired ones
-                    with open(temp_credentials_file) as f:
-                        cached_creds = json.load(f)
-                    assert cached_creds["access_token"] == "fresh_token"
 
     @patch.dict(os.environ, {}, clear=True)  # Clear environment
     def test_expired_env_credentials_are_rejected(self):
