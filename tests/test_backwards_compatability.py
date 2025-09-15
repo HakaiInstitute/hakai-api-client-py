@@ -176,6 +176,10 @@ class TestInitialization:
         client_default = Client(credentials=valid_credentials_dict)
         assert client_default.headers["User-Agent"] == "hakai-api-client-py"
         custom_agent = "my-custom-app/1.0"
+        # Set with param
+        client_custom = Client(credentials=valid_credentials_dict, user_agent="my-custom-app/1.0")
+        assert client_custom.headers["User-Agent"] == custom_agent
+        # Set with env variable
         monkeypatch.setenv(Client.USER_AGENT_ENV_VAR, custom_agent)
         client_custom = Client(credentials=valid_credentials_dict)
         assert client_custom.headers["User-Agent"] == custom_agent

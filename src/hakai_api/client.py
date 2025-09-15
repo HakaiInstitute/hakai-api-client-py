@@ -63,6 +63,7 @@ class Client(OAuth2Session):
         login_page: str = DEFAULT_LOGIN_PAGE,
         credentials: str | dict | None = None,
         credentials_file: str | Path = os.getenv(CREDENTIALS_ENV_VAR, Path.home() / ".hakai-api-auth"),
+        user_agent: str | None = None,
         auth_flow: Literal["web", "desktop"] = "web",
         local_port: int = 65500,
         use_refresh: bool = True,
@@ -78,6 +79,7 @@ class Client(OAuth2Session):
                 login page. If `None`, loads cached credentials or prompts for log in.
             credentials_file: The path to the file where credentials are saved. This will default to the path given by
                 environment variable `HAKAI_API_CREDENTIALS`, if defined, else to `~/.hakai-api-auth`.
+            user_agent: A user-agent string to use when requesting the hakai api to identify your application.
             auth_flow: Authentication flow type - "web" (default, copy/paste) or "desktop" (OAuth with PKCE).
                 Only used if credentials are not provided.
             local_port: Port for local callback server in desktop flow (default 65500).
@@ -93,6 +95,9 @@ class Client(OAuth2Session):
         self._auth_flow = auth_flow
         self._local_port = local_port
         self._use_refresh = use_refresh
+
+        if user_agent is None:
+            user_agent = os.getenv(self.USER_AGENT_ENV_VAR, "hakai-api-client-py")
 
         # Create authentication strategy
         if auth_flow == "desktop":
@@ -133,7 +138,6 @@ class Client(OAuth2Session):
         super().__init__(token=self._credentials)
 
         # Set User-Agent header
-        user_agent = os.getenv(self.USER_AGENT_ENV_VAR, "hakai-api-client-py")
         self.headers.update({"User-Agent": user_agent})
         logger.debug(f"Hakai API client initialized successfully with User-Agent: {user_agent}")
 
