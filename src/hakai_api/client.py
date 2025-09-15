@@ -300,15 +300,6 @@ class Client(OAuth2Session):
         return self._auth_strategy._check_keys_convert_types(credentials)
 
     @property
-    def _credentials_file(self) -> str:
-        """Backward compatibility property for credentials file path.
-
-        Returns:
-            The path to the credentials file.
-        """
-        return self._auth_strategy.credentials_file
-
-    @property
     def credentials_file(self) -> Path:
         """Backward compatibility property for credentials file path.
 
