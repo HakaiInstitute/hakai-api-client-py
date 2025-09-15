@@ -1,13 +1,17 @@
 """Hakai API Python Client."""
 
+from __future__ import annotations
+
 import os
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from loguru import logger
-from requests import Response
 from requests_oauthlib import OAuth2Session
 
 from .auth import DesktopAuthStrategy, WebAuthStrategy
+
+if TYPE_CHECKING:
+    from requests import Response
 
 
 class Client(OAuth2Session):
@@ -213,7 +217,7 @@ class Client(OAuth2Session):
         api_root: str = DEFAULT_API_ROOT,
         login_page: str = DEFAULT_LOGIN_PAGE,
         credentials: str | dict | None = None,
-    ) -> "Client":
+    ) -> Client:
         """Create a client using web authentication flow.
 
         Args:
@@ -237,7 +241,7 @@ class Client(OAuth2Session):
         api_root: str = DEFAULT_API_ROOT,
         local_port: int = 65500,
         credentials: str | dict | None = None,
-    ) -> "Client":
+    ) -> Client:
         """Create a client using desktop OAuth authentication flow.
 
         Args:
