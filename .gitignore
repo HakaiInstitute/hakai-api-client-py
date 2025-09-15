@@ -102,3 +102,6 @@ ENV/
 
 .idea/
 .serena
+.aider*
+/.claude/
+CLAUDE.md
