@@ -59,13 +59,13 @@ class AuthStrategy(ABC):
 
         Raises:
             OSError: If file cannot be created or written to.
-            json.JSONEncodeError: If credentials cannot be serialized to JSON.
+            TypeError: If credentials cannot be serialized to JSON.
         """
         try:
             with open(self.credentials_file, "w") as outfile:
                 json.dump(credentials, outfile)
             logger.debug(f"Credentials saved to {self.credentials_file}")
-        except (OSError, json.JSONEncodeError) as e:
+        except (OSError, TypeError) as e:
             logger.error(f"Failed to save credentials to file: {e}")
             raise
 
