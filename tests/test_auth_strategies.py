@@ -4,6 +4,7 @@ import json
 import os
 import tempfile
 from datetime import datetime, timezone
+from pathlib import Path
 from time import mktime
 from typing import Any, Generator
 from unittest.mock import Mock, patch
@@ -32,20 +33,20 @@ class ConcreteAuthStrategy(AuthStrategy):
 
 
 @pytest.fixture
-def temp_credentials_file() -> Generator[str, None, None]:
+def temp_credentials_file() -> Generator[Path, None, None]:
     """Create a temporary credentials file for testing.
 
     Yields:
         str: Path to the temporary credentials file.
     """
     with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as f:
-        temp_file = f.name
+        temp_file = Path(f.name)
 
     yield temp_file
 
     # Cleanup
     try:
-        os.unlink(temp_file)
+        temp_file.unlink()
     except OSError:
         pass
 
@@ -89,14 +90,18 @@ class TestAuthStrategy:
 
     def test_init(self) -> None:
         """Test AuthStrategy initialization."""
-        strategy = ConcreteAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = ConcreteAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         assert strategy.api_root == "https://api.example.com"
         assert strategy.login_page == "https://login.example.com"
-        assert strategy.credentials_file == os.path.expanduser("~/.hakai-api-auth")
+        assert strategy.credentials_file == Path.home() / ".hakai-api-auth"
 
     def test_save_and_get_credentials_from_file(self, temp_credentials_file: str, valid_credentials: dict) -> None:
         """Test saving and loading credentials from file."""
-        strategy = ConcreteAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = ConcreteAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         strategy.credentials_file = temp_credentials_file
 
         # Save credentials
@@ -111,7 +116,9 @@ class TestAuthStrategy:
         self, temp_credentials_file: str, valid_credentials: dict
     ) -> None:
         """Test file_credentials_are_valid with valid credentials."""
-        strategy = ConcreteAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = ConcreteAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         strategy.credentials_file = temp_credentials_file
 
         # Save valid credentials
@@ -124,7 +131,9 @@ class TestAuthStrategy:
         self, temp_credentials_file: str, expired_credentials: dict
     ) -> None:
         """Test file_credentials_are_valid with expired credentials."""
-        strategy = ConcreteAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = ConcreteAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         strategy.credentials_file = temp_credentials_file
 
         # Save expired credentials
@@ -137,14 +146,18 @@ class TestAuthStrategy:
 
     def test_file_credentials_are_valid_no_file(self) -> None:
         """Test file_credentials_are_valid with no file."""
-        strategy = ConcreteAuthStrategy("https://api.example.com", "https://login.example.com")
-        strategy.credentials_file = "/nonexistent/file"
+        strategy = ConcreteAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
+        strategy.credentials_file = Path("/nonexistent/file")
 
         assert strategy.file_credentials_are_valid() is False
 
     def test_parse_credentials_string_valid(self) -> None:
         """Test parsing a valid credentials string."""
-        strategy = ConcreteAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = ConcreteAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         cred_string = "access_token=test123&token_type=bearer&expires_at=1234567890&expires_in=3600"
 
         result = strategy.parse_credentials_string(cred_string)
@@ -159,7 +172,9 @@ class TestAuthStrategy:
 
     def test_parse_credentials_string_missing_required_keys(self) -> None:
         """Test parsing credentials string with missing required keys."""
-        strategy = ConcreteAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = ConcreteAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         cred_string = "access_token=test123&expires_in=3600"  # Missing token_type and expires_at
 
         with pytest.raises(ValueError, match="missing required keys"):
@@ -167,7 +182,9 @@ class TestAuthStrategy:
 
     def test_check_keys_convert_types_valid(self) -> None:
         """Test _check_keys_convert_types with valid data."""
-        strategy = ConcreteAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = ConcreteAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         input_creds = {
             "access_token": "test123",
             "token_type": "bearer",
@@ -187,7 +204,9 @@ class TestAuthStrategy:
 
     def test_reset_credentials(self, temp_credentials_file: str) -> None:
         """Test resetting (deleting) credentials file."""
-        strategy = ConcreteAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = ConcreteAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         strategy.credentials_file = temp_credentials_file
 
         # Create file
@@ -207,7 +226,9 @@ class TestWebAuthStrategy:
 
     def test_init(self) -> None:
         """Test WebAuthStrategy initialization."""
-        strategy = WebAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = WebAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         assert strategy.api_root == "https://api.example.com"
         assert strategy.login_page == "https://login.example.com"
 
@@ -218,7 +239,9 @@ class TestWebAuthStrategy:
         env_value = f"access_token=env_token&token_type=bearer&expires_at={future_timestamp}&expires_in=3600"
 
         with patch.dict(os.environ, {"HAKAI_API_CREDENTIALS": env_value}):
-            strategy = WebAuthStrategy("https://api.example.com", "https://login.example.com")
+            strategy = WebAuthStrategy(
+                "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+            )
 
             result = strategy.get_credentials()
 
@@ -230,9 +253,11 @@ class TestWebAuthStrategy:
             }
             assert result == expected
 
-    def test_get_credentials_from_cached_file(self, temp_credentials_file: str, valid_credentials: dict) -> None:
+    def test_get_credentials_from_cached_file(self, temp_credentials_file: Path, valid_credentials: dict) -> None:
         """Test getting credentials from cached file."""
-        strategy = WebAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = WebAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         strategy.credentials_file = temp_credentials_file
 
         # Save valid credentials to file
@@ -249,8 +274,10 @@ class TestWebAuthStrategy:
     )
     def test_get_credentials_from_web_input(self, mock_input: Any) -> None:
         """Test getting credentials from web input."""
-        strategy = WebAuthStrategy("https://api.example.com", "https://login.example.com")
-        strategy.credentials_file = "/nonexistent/file"  # Ensure no cached file
+        strategy = WebAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
+        strategy.credentials_file = Path("/nonexistent/file")  # Ensure no cached file
 
         with patch.dict(os.environ, {}, clear=True):  # Clear environment
             result = strategy.get_credentials()
@@ -266,7 +293,9 @@ class TestWebAuthStrategy:
     @patch("builtins.input", return_value="invalid_format")
     def test_get_credentials_web_input_invalid_format(self, mock_input: Any) -> None:
         """Test web input with invalid format."""
-        strategy = WebAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = WebAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         strategy.credentials_file = "/nonexistent/file"
 
         with patch.dict(os.environ, {}, clear=True):
@@ -279,7 +308,12 @@ class TestDesktopAuthStrategy:
 
     def test_init(self) -> None:
         """Test DesktopAuthStrategy initialization."""
-        strategy = DesktopAuthStrategy("https://api.example.com", "https://login.example.com", local_port=8080)
+        strategy = DesktopAuthStrategy(
+            "https://api.example.com",
+            "https://login.example.com",
+            local_port=8080,
+            credentials_file=Path.home() / ".hakai-api-auth",
+        )
         assert strategy.api_root == "https://api.example.com"
         assert strategy.login_page == "https://login.example.com"
         assert strategy.local_port == 8080
@@ -294,7 +328,9 @@ class TestDesktopAuthStrategy:
         env_value = f"access_token=env_token&token_type=bearer&expires_at={future_timestamp}&expires_in=3600"
 
         with patch.dict(os.environ, {"HAKAI_API_CREDENTIALS": env_value}):
-            strategy = DesktopAuthStrategy("https://api.example.com", "https://login.example.com")
+            strategy = DesktopAuthStrategy(
+                "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+            )
 
             result = strategy.get_credentials()
 
@@ -308,7 +344,9 @@ class TestDesktopAuthStrategy:
 
     def test_get_credentials_from_cached_file(self, temp_credentials_file: str, valid_credentials: dict) -> None:
         """Test getting credentials from cached file."""
-        strategy = DesktopAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = DesktopAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         strategy.credentials_file = temp_credentials_file
 
         # Save valid credentials to file
@@ -323,8 +361,10 @@ class TestDesktopAuthStrategy:
     @patch("requests.post")
     def test_oauth_flow_success(self, mock_post: Any, mock_browser: Any) -> None:
         """Test successful OAuth flow."""
-        strategy = DesktopAuthStrategy("https://api.example.com", "https://login.example.com")
-        strategy.credentials_file = "/nonexistent/file"
+        strategy = DesktopAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
+        strategy.credentials_file = Path("/nonexistent/file")
 
         # Mock token exchange response
         mock_response = Mock()
@@ -356,7 +396,9 @@ class TestDesktopAuthStrategy:
     @patch("requests.post")
     def test_refresh_token_success(self, mock_post: Any) -> None:
         """Test successful token refresh."""
-        strategy = DesktopAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = DesktopAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
 
         # Mock refresh response
         mock_response = Mock()
@@ -387,7 +429,9 @@ class TestDesktopAuthStrategy:
 
     def test_refresh_token_no_refresh_token(self) -> None:
         """Test refresh token with no refresh token available."""
-        strategy = DesktopAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = DesktopAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
 
         credentials = {
             "access_token": "token",
@@ -401,7 +445,9 @@ class TestDesktopAuthStrategy:
     @patch("requests.post")
     def test_refresh_token_failure(self, mock_post: Any) -> None:
         """Test failed token refresh."""
-        strategy = DesktopAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = DesktopAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
 
         # Mock failed refresh response
         mock_response = Mock()
@@ -421,7 +467,9 @@ class TestDesktopAuthStrategy:
     @patch("requests.post")
     def test_exchange_code_for_tokens_failure(self, mock_post: Any) -> None:
         """Test token exchange failure."""
-        strategy = DesktopAuthStrategy("https://api.example.com", "https://login.example.com")
+        strategy = DesktopAuthStrategy(
+            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
+        )
         strategy._authorization_code = "test_code"
         strategy._code_verifier = "test_verifier"
         strategy.local_port = 65500

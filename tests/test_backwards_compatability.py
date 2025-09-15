@@ -9,6 +9,7 @@ import json
 import os
 import time
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 from freezegun import freeze_time
@@ -66,13 +67,13 @@ def mock_home_dir(tmp_path, monkeypatch):
     # Patch the AuthStrategy base class to use the mock credentials file
     from hakai_api.auth.base import AuthStrategy
 
-    def mock_init(self, api_root, login_page, **kwargs):
+    def mock_init(self, api_root, login_page, credentials_file, **kwargs):
         self.api_root = api_root
         self.login_page = login_page
-        self.credentials_file = str(mock_creds_file)
+        self.credentials_file = Path(mock_creds_file)
 
     monkeypatch.setattr(AuthStrategy, "__init__", mock_init)
-    return str(mock_creds_file)
+    return Path(mock_creds_file)
 
 
 class TestInitialization:

@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from time import mktime
+from typing import TYPE_CHECKING
 
 import requests
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -17,17 +20,18 @@ logger = logging.getLogger(__name__)
 class AuthStrategy(ABC):
     """Abstract base class for authentication strategies."""
 
-    def __init__(self, api_root: str, login_page: str, **kwargs: object) -> None:
+    def __init__(self, api_root: str, login_page: str, credentials_file: Path, **kwargs: object) -> None:
         """Initialize the authentication strategy.
 
         Args:
             api_root: The base url of the hakai api.
             login_page: The url of the login page to direct users to.
+            credentials_file: The path to the credentials file.
             **kwargs: Additional strategy-specific parameters.
         """
         self.api_root = api_root
         self.login_page = login_page
-        self.credentials_file = os.path.expanduser("~/.hakai-api-auth")
+        self.credentials_file = credentials_file
 
     @abstractmethod
     def get_credentials(self) -> dict:
@@ -62,7 +66,9 @@ class AuthStrategy(ABC):
             TypeError: If credentials cannot be serialized to JSON.
         """
         try:
-            with open(self.credentials_file, "w") as outfile:
+            # Ensure parent directory exists
+            self.credentials_file.parent.mkdir(parents=True, exist_ok=True)
+            with self.credentials_file.open("w") as outfile:
                 json.dump(credentials, outfile)
             logger.debug(f"Credentials saved to {self.credentials_file}")
         except (OSError, TypeError) as e:
@@ -77,7 +83,7 @@ class AuthStrategy(ABC):
         Returns:
             A dict containing the credentials with required keys and proper types.
         """
-        with open(self.credentials_file) as infile:
+        with self.credentials_file.open() as infile:
             result = json.load(infile)
         result = self._check_keys_convert_types(result)
         return result
@@ -91,7 +97,7 @@ class AuthStrategy(ABC):
         Returns:
             True if the credentials are valid, False otherwise.
         """
-        if not os.path.isfile(self.credentials_file):
+        if not self.credentials_file.is_file():
             logger.debug("No cached credentials file found")
             return False
 
@@ -101,7 +107,7 @@ class AuthStrategy(ABC):
         except (KeyError, ValueError, OSError, json.JSONDecodeError) as e:
             logger.warning(f"Invalid cached credentials file, removing: {e}")
             try:
-                os.remove(self.credentials_file)
+                self.credentials_file.unlink()
             except OSError:
                 pass  # File might already be gone
             return False
@@ -121,9 +127,9 @@ class AuthStrategy(ABC):
 
         Deletes the credentials file from the filesystem if it exists.
         """
-        if os.path.isfile(self.credentials_file):
+        if self.credentials_file.is_file():
             logger.info("Removing cached credentials file")
-            os.remove(self.credentials_file)
+            self.credentials_file.unlink()
         else:
             logger.debug("No cached credentials file to remove")
 
