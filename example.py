@@ -10,5 +10,5 @@ if __name__ == "__main__":
 
     # DESKTOP FLOW
     client = Client(auth_flow="desktop")  # Follow the prompts in the webpage that opens
-    response = client.get(f"{client.api_root}/whoami")
+    response = client.get("/whoami")
     print(response.json())

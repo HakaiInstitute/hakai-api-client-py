@@ -313,6 +313,10 @@ class Client(OAuth2Session):
         Returns:
             Response object
         """
+        # Test for relative urls and prepend API root if needed
+        if uri.startswith("/"):
+            uri = f"{self.api_root}{uri}"
+
         # First attempt
         response = super().request(method, uri, **kwargs)
 
