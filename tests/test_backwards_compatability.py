@@ -184,6 +184,24 @@ class TestInitialization:
         client_custom = Client(credentials=valid_credentials_dict)
         assert client_custom.headers["User-Agent"] == custom_agent
 
+    def test_init_user_credentials_file(self, monkeypatch, valid_credentials_dict):
+        # Mock save_credentials_to_file to prevent file creation during tests
+        from unittest.mock import Mock
+
+        mock_save = Mock()
+        monkeypatch.setattr("hakai_api.auth.base.AuthStrategy.save_credentials_to_file", mock_save)
+
+        client_default = Client(credentials=valid_credentials_dict)
+        assert client_default.credentials_file == str(Path.home() / ".hakai-api-auth")
+        creds_file = "~/.custom_credentials"
+        # Set with param
+        client_custom = Client(credentials=valid_credentials_dict, credentials_file=creds_file)
+        assert client_custom.credentials_file == creds_file
+        # Set with env variable
+        monkeypatch.setenv(Client.CREDENTIALS_ENV_VAR, creds_file)
+        client_custom = Client(credentials=valid_credentials_dict)
+        assert client_custom.credentials_file == creds_file
+
 
 class TestStaticAndClassMethods:
     def test_parse_credentials_string(self, mocker, valid_credentials_dict):

@@ -62,7 +62,7 @@ class Client(OAuth2Session):
         api_root: str = DEFAULT_API_ROOT,
         login_page: str = DEFAULT_LOGIN_PAGE,
         credentials: str | dict | None = None,
-        credentials_file: str | Path = os.getenv(CREDENTIALS_ENV_VAR, Path.home() / ".hakai-api-auth"),
+        credentials_file: str | Path | None = None,
         user_agent: str | None = None,
         auth_flow: Literal["web", "desktop"] = "web",
         local_port: int = 65500,
@@ -80,6 +80,8 @@ class Client(OAuth2Session):
             credentials_file: The path to the file where credentials are saved. This will default to the path given by
                 environment variable `HAKAI_API_CREDENTIALS`, if defined, else to `~/.hakai-api-auth`.
             user_agent: A user-agent string to use when requesting the hakai api to identify your application.
+                This will default to the value given by environment variable `HAKAI_API_USER_AGENT`, if defined, else
+                to `hakai-api-client-py`.
             auth_flow: Authentication flow type - "web" (default, copy/paste) or "desktop" (OAuth with PKCE).
                 Only used if credentials are not provided.
             local_port: Port for local callback server in desktop flow (default 65500).
@@ -96,16 +98,20 @@ class Client(OAuth2Session):
         self._local_port = local_port
         self._use_refresh = use_refresh
 
+        if credentials_file is None:
+            credentials_file = os.getenv(self.CREDENTIALS_ENV_VAR, Path.home() / ".hakai-api-auth")
+        credentials_file = Path(credentials_file)
+
         if user_agent is None:
             user_agent = os.getenv(self.USER_AGENT_ENV_VAR, "hakai-api-client-py")
 
         # Create authentication strategy
         if auth_flow == "desktop":
             self._auth_strategy = DesktopAuthStrategy(
-                api_root, login_page, local_port=local_port, credentials_file=Path(credentials_file)
+                api_root, login_page, local_port=local_port, credentials_file=credentials_file
             )
         else:
-            self._auth_strategy = WebAuthStrategy(api_root, login_page, credentials_file=Path(credentials_file))
+            self._auth_strategy = WebAuthStrategy(api_root, login_page, credentials_file=credentials_file)
 
         # Get credentials using strategy or provided values
         logger.trace(f"Initializing Hakai API client with auth_flow={auth_flow}")
@@ -304,13 +310,13 @@ class Client(OAuth2Session):
         return self._auth_strategy._check_keys_convert_types(credentials)
 
     @property
-    def credentials_file(self) -> Path:
+    def credentials_file(self) -> str:
         """Backward compatibility property for credentials file path.
 
         Returns:
             The path to the credentials file.
         """
-        return self._auth_strategy.credentials_file
+        return str(self._auth_strategy.credentials_file)
 
     def _get_credentials_from_file(self) -> dict:
         """Backward compatibility method for getting credentials from file.
