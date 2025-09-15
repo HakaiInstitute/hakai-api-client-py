@@ -12,6 +12,10 @@ and test the code, and deploy a new version.
 [Configuration](#configuration)
 
 [Tests](#tests)
+- [Running Tests](#running-tests)
+- [Authentication Flow Testing](#authentication-flow-testing)
+- [Linting and Formatting](#linting-and-formatting)
+- [Environment Variables for Testing](#environment-variables-for-testing)
 
 [Deployment](#deployment)
 
@@ -20,8 +24,13 @@ and test the code, and deploy a new version.
 ## Project structure
 
 The business logic for this package is located
-in [`src/hakai_api/Client.py`](src/hakai_api/client.py).
+in [`src/hakai_api/client.py`](src/hakai_api/client.py).
 All tests are located in the `tests/` directory.
+
+Key components:
+- `client.py` - Main OAuth2Session client with authentication flows
+- `auth/` - Authentication strategies (web and desktop flows)
+- `tests/` - Comprehensive test suite including authentication flow tests
 
 ## Configuration
 
@@ -34,12 +43,8 @@ To set up an environment for development, clone this repository and run the foll
 commands from the root directory of the repository:
 
 ```bash
-# Create and activate a virtual environment (optional but recommended)
-python -m venv .venv
-source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
-
-# Install the package and its dependencies
-uv sync --dev
+# Install the package and its dependencies (uv handles virtual environment automatically)
+uv sync
 ```
 
 ### Pre-commit
@@ -66,12 +71,25 @@ pre-commit run -a
 Tests and lint checks are automatically run on pull requests and pushes to the main
 branch using GitHub Actions.
 
-To run the tests locally, run the following command from the root directory of the
-repository while the virtual environment is active:
+### Running Tests
+
+To run the tests locally:
 
 ```bash
+# Run all tests
 pytest
+
+# Run a specific test file
+pytest tests/test_client.py
+
+# Run a specific test function
+pytest tests/test_client.py::test_get_valid_credentials_from_file
+
+# Run tests with verbose output
+pytest -v
 ```
+
+### Linting and Formatting
 
 To run lint checks locally:
 
