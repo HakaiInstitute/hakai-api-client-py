@@ -28,7 +28,7 @@ class WebAuthStrategy(AuthStrategy):
         # Try environment variable first
         env_credentials = os.getenv("HAKAI_API_CREDENTIALS")
         if env_credentials is not None:
-            logger.debug("Loading credentials from environment variable")
+            logger.trace("Loading credentials from environment variable")
             try:
                 parsed_creds = self.parse_credentials_string(env_credentials)
                 # Check if environment credentials are expired
@@ -41,7 +41,7 @@ class WebAuthStrategy(AuthStrategy):
 
         # Try cached credentials
         if self.file_credentials_are_valid():
-            logger.debug("Loading cached credentials from file")
+            logger.trace("Loading cached credentials from file")
             return self.get_credentials_from_file()
 
         # Prompt user for new credentials
@@ -64,12 +64,12 @@ class WebAuthStrategy(AuthStrategy):
         print(f"Please go here and authorize: {self.login_page}")
         response = input("\nCopy and paste your credentials from the login page here and press <enter>:\n")
 
-        logger.debug("Parsing credentials from user input")
+        logger.trace("Parsing credentials from user input")
         try:
             # Reformat response to dict
             credentials = dict(map(lambda x: x.split("="), response.split("&")))
             credentials = self._check_keys_convert_types(credentials)
-            logger.debug("Successfully parsed web credentials")
+            logger.trace("Successfully parsed web credentials")
             return credentials
         except (ValueError, AttributeError) as e:
             logger.error(f"Failed to parse credentials from input: {e}")

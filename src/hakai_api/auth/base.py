@@ -68,7 +68,7 @@ class AuthStrategy(ABC):
             self.credentials_file.parent.mkdir(parents=True, exist_ok=True)
             with self.credentials_file.open("w") as outfile:
                 json.dump(credentials, outfile)
-            logger.debug(f"Credentials saved to {self.credentials_file}")
+            logger.trace(f"Credentials saved to {self.credentials_file}")
         except (OSError, TypeError) as e:
             logger.error(f"Failed to save credentials to file: {e}")
             raise
@@ -96,7 +96,7 @@ class AuthStrategy(ABC):
             True if the credentials are valid, False otherwise.
         """
         if not self.credentials_file.is_file():
-            logger.debug("No cached credentials file found")
+            logger.trace("No cached credentials file found")
             return False
 
         try:
@@ -113,11 +113,11 @@ class AuthStrategy(ABC):
         now = int(mktime(datetime.now().timetuple()) + datetime.now().microsecond / 1000000.0)
 
         if now > expires_at:
-            logger.info("Cached credentials have expired, removing")
+            logger.debug("Cached credentials have expired, removing")
             self.reset_credentials()
             return False
 
-        logger.debug("Cached credentials are valid")
+        logger.trace("Cached credentials are valid")
         return True
 
     def reset_credentials(self) -> None:
@@ -126,10 +126,10 @@ class AuthStrategy(ABC):
         Deletes the credentials file from the filesystem if it exists.
         """
         if self.credentials_file.is_file():
-            logger.info("Removing cached credentials file")
+            logger.debug("Removing cached credentials file")
             self.credentials_file.unlink()
         else:
-            logger.debug("No cached credentials file to remove")
+            logger.trace("No cached credentials file to remove")
 
     def parse_credentials_string(self, credentials: str) -> dict:
         """Parse a credentials string into a dictionary.
@@ -145,11 +145,11 @@ class AuthStrategy(ABC):
             AttributeError: If the string lacks expected string methods.
             KeyError: If required credential keys are missing after parsing.
         """
-        logger.debug("Parsing credentials string")
+        logger.trace("Parsing credentials string")
         try:
             result = dict(map(lambda x: x.split("="), credentials.split("&")))
             result = self._check_keys_convert_types(result)
-            logger.debug("Successfully parsed and validated credentials string")
+            logger.trace("Successfully parsed and validated credentials string")
             return result
         except (ValueError, AttributeError, KeyError) as e:
             logger.error(f"Failed to parse credentials string: {e}")
@@ -179,7 +179,7 @@ class AuthStrategy(ABC):
         # Convert expires_at to int
         try:
             credentials["expires_at"] = int(float(credentials["expires_at"]))
-            logger.debug(f"Credentials expire at timestamp: {credentials['expires_at']}")
+            logger.trace(f"Credentials expire at timestamp: {credentials['expires_at']}")
         except (ValueError, TypeError) as e:
             logger.error(f"Invalid expires_at value: {e}")
             raise ValueError(f"Invalid expires_at value in credentials: {e}")
@@ -223,10 +223,10 @@ class AuthStrategy(ABC):
             Updated credentials dictionary if successful, None otherwise.
         """
         if "refresh_token" not in credentials:
-            logger.debug("No refresh token available, cannot refresh")
+            logger.trace("No refresh token available, cannot refresh")
             return None
 
-        logger.debug("Attempting to refresh access token")
+        logger.trace("Attempting to refresh access token")
 
         refresh_url = f"{self.api_root}/auth/refresh"
         data = {
@@ -249,7 +249,7 @@ class AuthStrategy(ABC):
             updated_credentials["expires_at"] = new_tokens["expires_at"]
             updated_credentials["expires_in"] = new_tokens["expires_in"]
 
-            logger.info("Access token refreshed successfully")
+            logger.trace("Access token refreshed successfully")
             return updated_credentials
 
         except (requests.RequestException, json.JSONDecodeError, KeyError) as e:

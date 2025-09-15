@@ -53,7 +53,7 @@ class DesktopAuthStrategy(AuthStrategy):
         # Try environment variable first
         env_credentials = os.getenv("HAKAI_API_CREDENTIALS")
         if env_credentials is not None:
-            logger.debug("Loading credentials from environment variable")
+            logger.trace("Loading credentials from environment variable")
             try:
                 parsed_creds = self.parse_credentials_string(env_credentials)
                 # Check if environment credentials are expired
@@ -66,11 +66,11 @@ class DesktopAuthStrategy(AuthStrategy):
 
         # Try cached credentials
         if self.file_credentials_are_valid():
-            logger.debug("Loading cached credentials from file")
+            logger.trace("Loading cached credentials from file")
             return self.get_credentials_from_file()
 
         # Start OAuth flow
-        logger.info("No valid cached credentials found, starting desktop authentication flow")
+        logger.debug("No valid cached credentials found, starting desktop authentication flow")
         return self._get_credentials_from_desktop_oauth()
 
     def _get_credentials_from_desktop_oauth(self) -> dict:
@@ -102,14 +102,14 @@ class DesktopAuthStrategy(AuthStrategy):
         webbrowser.open(auth_url)
 
         # Start local server to receive callback
-        logger.info(f"Starting local callback server on port {self.local_port}")
+        logger.trace(f"Starting local callback server on port {self.local_port}")
         self._authorization_code = self._wait_for_callback()
 
         if not self._authorization_code:
             logger.error("Failed to receive authorization code from OAuth callback")
             raise ValueError("Failed to receive authorization code")
 
-        logger.debug("Successfully received authorization code, exchanging for tokens")
+        logger.trace("Successfully received authorization code, exchanging for tokens")
         # Exchange code for tokens
         tokens = self._exchange_code_for_tokens()
 
@@ -124,9 +124,9 @@ class DesktopAuthStrategy(AuthStrategy):
         # Store refresh token if provided
         if "refresh_token" in tokens:
             credentials["refresh_token"] = tokens["refresh_token"]
-            logger.debug("Desktop OAuth completed successfully with refresh token")
+            logger.trace("Desktop OAuth completed successfully with refresh token")
         else:
-            logger.debug("Desktop OAuth completed successfully without refresh token")
+            logger.trace("Desktop OAuth completed successfully without refresh token")
 
         return credentials
 
@@ -237,7 +237,7 @@ class DesktopAuthStrategy(AuthStrategy):
             logger.error(f"OAuth callback server error: {server_error}")
             raise ValueError(server_error)
 
-        logger.debug("OAuth callback received successfully")
+        logger.trace("OAuth callback received successfully")
         return authorization_code
 
     def _exchange_code_for_tokens(self) -> dict:
@@ -268,7 +268,7 @@ class DesktopAuthStrategy(AuthStrategy):
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-        logger.info("Successfully exchanged authorization code for tokens")
+        logger.debug("Successfully exchanged authorization code for tokens")
         return response.json()
 
     @property

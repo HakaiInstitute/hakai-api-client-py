@@ -103,18 +103,18 @@ class Client(OAuth2Session):
             self._auth_strategy = WebAuthStrategy(api_root, login_page, credentials_file=Path(credentials_file))
 
         # Get credentials using strategy or provided values
-        logger.debug(f"Initializing Hakai API client with auth_flow={auth_flow}")
+        logger.trace(f"Initializing Hakai API client with auth_flow={auth_flow}")
 
         if isinstance(credentials, dict):
-            logger.debug("Using provided credentials dictionary")
+            logger.trace("Using provided credentials dictionary")
             # Validate and type-convert the provided credentials
             self._credentials = self._auth_strategy._check_keys_convert_types(credentials)
         elif isinstance(credentials, str):
-            logger.debug("Parsing credentials from provided string")
+            logger.trace("Parsing credentials from provided string")
             self._credentials = self._auth_strategy.parse_credentials_string(credentials)
         else:
             # Use strategy to get credentials (handles env vars and cached credentials properly)
-            logger.info(f"No credentials provided, using {auth_flow} authentication strategy")
+            logger.trace(f"No credentials provided, using {auth_flow} authentication strategy")
             try:
                 self._credentials = self._auth_strategy.get_credentials()
             except Exception as e:
@@ -126,7 +126,7 @@ class Client(OAuth2Session):
             raise ValueError("Credentials could not be set.")
 
         # Cache the credentials
-        logger.debug(f"Caching credentials to file {self.credentials_file}")
+        logger.trace(f"Caching credentials to file {self.credentials_file}")
         self._auth_strategy.save_credentials_to_file(self._credentials)
 
         # Init the OAuth2Session parent class with credentials
@@ -135,7 +135,7 @@ class Client(OAuth2Session):
         # Set User-Agent header
         user_agent = os.getenv(self.USER_AGENT_ENV_VAR, "hakai-api-client-py")
         self.headers.update({"User-Agent": user_agent})
-        logger.info(f"Hakai API client initialized successfully with User-Agent: {user_agent}")
+        logger.debug(f"Hakai API client initialized successfully with User-Agent: {user_agent}")
 
     @property
     def api_root(self) -> str:
@@ -198,10 +198,10 @@ class Client(OAuth2Session):
             True if refresh successful, False otherwise.
         """
         if "refresh_token" not in self._credentials:
-            logger.debug("No refresh token available, cannot refresh")
+            logger.trace("No refresh token available, cannot refresh")
             return False
 
-        logger.debug("Attempting to refresh access token using auth strategy")
+        logger.trace("Attempting to refresh access token using auth strategy")
 
         # All strategies that support refresh tokens should have a refresh_token method
         if self._use_refresh:
@@ -210,7 +210,7 @@ class Client(OAuth2Session):
                 self._credentials = updated_credentials
                 self._auth_strategy.save_credentials_to_file(self._credentials)
                 self.token = self._credentials
-                logger.info("Access token refreshed successfully")
+                logger.trace("Access token refreshed successfully")
                 return True
 
         logger.warning("Token refresh failed or is not supported by the current auth strategy")
@@ -340,16 +340,16 @@ class Client(OAuth2Session):
 
             # First try refresh token if available
             if "refresh_token" in self._credentials:
-                logger.debug("Attempting token refresh")
+                logger.trace("Attempting token refresh")
                 if self.refresh_token():
-                    logger.info("Token refresh successful, retrying request")
+                    logger.trace("Token refresh successful, retrying request")
                     response = super().request(method, uri, **kwargs)
                     return response
                 else:
                     logger.warning("Token refresh failed, falling back to full re-authentication")
 
             # If no refresh token or refresh failed, do full re-authentication
-            logger.info("Starting full re-authentication flow")
+            logger.debug("Starting full re-authentication flow")
 
             # Clear cached credentials and get new ones
             self._auth_strategy.reset_credentials()
@@ -365,7 +365,7 @@ class Client(OAuth2Session):
                 self._auth_strategy.save_credentials_to_file(self._credentials)
 
                 # Retry the request with new credentials
-                logger.info("Re-authentication successful, retrying request")
+                logger.trace("Re-authentication successful, retrying request")
                 response = super().request(method, uri, **kwargs)
 
             except Exception as e:
