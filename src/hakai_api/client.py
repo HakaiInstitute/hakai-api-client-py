@@ -59,6 +59,7 @@ class Client(OAuth2Session):
         credentials: str | dict | None = None,
         auth_flow: Literal["web", "desktop"] = "web",
         local_port: int = 65500,
+        use_refresh: bool = True,
     ) -> None:
         """Create a new Client class with credentials.
 
@@ -73,6 +74,8 @@ class Client(OAuth2Session):
                 Only used if credentials are not provided.
             local_port: Port for local callback server in desktop flow (default 65500).
                 Only used when auth_flow="desktop".
+            use_refresh: Whether to use the refresh token to automatically extend user sessions.
+                Currently only works for credentials obtained with the "desktop" authentication flow.
 
         Raises:
             ValueError: If credentials are unable to be set.
@@ -81,6 +84,7 @@ class Client(OAuth2Session):
         self._login_page = login_page
         self._auth_flow = auth_flow
         self._local_port = local_port
+        self._use_refresh = use_refresh
 
         # Create authentication strategy
         if auth_flow == "desktop":
@@ -190,7 +194,7 @@ class Client(OAuth2Session):
         logger.debug("Attempting to refresh access token using auth strategy")
 
         # All strategies that support refresh tokens should have a refresh_token method
-        if hasattr(self._auth_strategy, "refresh_token"):
+        if self._use_refresh:
             updated_credentials = self._auth_strategy.refresh_token(self._credentials)
             if updated_credentials:
                 self._credentials = updated_credentials
