@@ -193,7 +193,7 @@ class TestInitialization:
 
         client_default = Client(credentials=valid_credentials_dict)
         assert client_default.credentials_file == str(Path.home() / ".hakai-api-auth")
-        creds_file = "~/.custom_credentials"
+        creds_file = str(Path.home() / ".custom_credentials")
         # Set with param
         client_custom = Client(credentials=valid_credentials_dict, credentials_file=creds_file)
         assert client_custom.credentials_file == creds_file
