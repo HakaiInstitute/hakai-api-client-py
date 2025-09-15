@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 import secrets
 import webbrowser
@@ -13,10 +12,9 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 import pkce
 import requests
+from loguru import logger
 
 from .base import AuthStrategy
-
-logger = logging.getLogger(__name__)
 
 
 class DesktopAuthStrategy(AuthStrategy):

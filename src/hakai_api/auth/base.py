@@ -3,18 +3,16 @@
 from __future__ import annotations
 
 import json
-import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from time import mktime
 from typing import TYPE_CHECKING
 
 import requests
+from loguru import logger
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-logger = logging.getLogger(__name__)
 
 
 class AuthStrategy(ABC):
