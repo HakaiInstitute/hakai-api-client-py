@@ -74,7 +74,7 @@ print(response.json())
 
 ## User Agent Configuration
 
-**Important**: Set a descriptive user agent to help identify your application on the backend:
+**Important**: Set a descriptive user agent to help identify your application on the backend. Often the repository url is a good way to identify yourself:
 
 ```python
 from hakai_api import Client
