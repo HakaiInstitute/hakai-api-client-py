@@ -12,6 +12,10 @@ and test the code, and deploy a new version.
 [Configuration](#configuration)
 
 [Tests](#tests)
+- [Running Tests](#running-tests)
+- [Authentication Flow Testing](#authentication-flow-testing)
+- [Linting and Formatting](#linting-and-formatting)
+- [Environment Variables for Testing](#environment-variables-for-testing)
 
 [Deployment](#deployment)
 
@@ -20,8 +24,13 @@ and test the code, and deploy a new version.
 ## Project structure
 
 The business logic for this package is located
-in [`src/hakai_api/Client.py`](src/hakai_api/Client.py).
+in [`src/hakai_api/client.py`](src/hakai_api/client.py).
 All tests are located in the `tests/` directory.
+
+Key components:
+- `client.py` - Main OAuth2Session client with authentication flows
+- `auth/` - Authentication strategies (web and desktop flows)
+- `tests/` - Comprehensive test suite including authentication flow tests
 
 ## Configuration
 
@@ -34,12 +43,8 @@ To set up an environment for development, clone this repository and run the foll
 commands from the root directory of the repository:
 
 ```bash
-# Create and activate a virtual environment (optional but recommended)
-python -m venv .venv
-source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
-
-# Install the package and its dependencies
-uv sync --dev
+# Install the package and its dependencies (uv handles virtual environment automatically)
+uv sync
 ```
 
 ### Pre-commit
@@ -66,12 +71,98 @@ pre-commit run -a
 Tests and lint checks are automatically run on pull requests and pushes to the main
 branch using GitHub Actions.
 
-To run the tests locally, run the following command from the root directory of the
-repository while the virtual environment is active:
+### Running Tests
+
+To run the tests locally:
 
 ```bash
+# Run all tests
 pytest
+
+# Run a specific test file
+pytest tests/test_client.py
+
+# Run a specific test function
+pytest tests/test_client.py::test_get_valid_credentials_from_file
+
+# Run tests with verbose output
+pytest -v
 ```
+
+### Authentication Flow Testing
+
+The project includes comprehensive tests for both authentication flows:
+
+- **Web flow tests**: Test credential parsing, file operations, and web-based authentication
+- **Desktop flow tests**: Test OAuth2 with PKCE flow, token refresh, and callback handling
+- **Mock tests**: Most tests use mocked authentication to avoid requiring real credentials
+
+When adding new authentication features, ensure you add appropriate tests for both flows.
+
+#### Web Authentication Flow
+
+The web flow requires users to manually copy credentials from a browser:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client
+    participant Browser
+    participant API
+
+    User->>Client: Create Client()
+    Client->>Client: Check cached credentials
+    alt No valid cached credentials
+        Client->>User: Display login URL
+        User->>Browser: Open login URL
+        Browser->>API: User logs in
+        API->>Browser: Display credentials token
+        Browser->>User: Show credentials token
+        User->>Client: Copy/paste credentials
+        Client->>Client: Parse and validate credentials
+        Client->>Client: Cache credentials to file
+    end
+    Client->>API: Make authenticated request
+    API->>Client: Return response
+```
+
+#### Desktop Authentication Flow (OAuth2 with PKCE)
+
+The desktop flow uses OAuth2 with PKCE for more secure authentication:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client
+    participant LocalServer
+    participant Browser
+    participant API
+
+    User->>Client: Create Client(auth_flow="desktop")
+    Client->>Client: Check cached credentials
+    alt No valid cached credentials
+        Client->>Client: Generate PKCE code_verifier & code_challenge
+        Client->>LocalServer: Start local callback server
+        Client->>Browser: Open OAuth URL with PKCE params
+        Browser->>API: User logs in and authorizes
+        API->>Browser: Redirect to local callback with auth code
+        Browser->>LocalServer: Send auth code
+        LocalServer->>Client: Receive auth code
+        Client->>API: Exchange auth code + code_verifier for tokens
+        API->>Client: Return access_token & refresh_token
+        Client->>Client: Cache credentials to file
+        Client->>LocalServer: Shutdown callback server
+    end
+    Client->>API: Make authenticated request
+    alt Token expired
+        Client->>API: Use refresh_token to get new access_token
+        API->>Client: Return new access_token
+        Client->>Client: Update cached credentials
+    end
+    API->>Client: Return response
+```
+
+### Linting and Formatting
 
 To run lint checks locally:
 
@@ -89,6 +180,18 @@ To automatically format the code:
 
 ```bash
 ruff format .
+```
+
+### Environment Variables for Testing
+
+Some tests may require environment variables:
+
+```bash
+# Optional: Set custom user agent for testing
+export HAKAI_API_USER_AGENT="test-client/1.0"
+
+# Optional: Set custom credentials file location
+export HAKAI_API_CREDENTIALS="/tmp/test-credentials"
 ```
 
 ## Deployment

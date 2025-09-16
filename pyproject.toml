@@ -3,7 +3,14 @@ name = "hakai_api"
 version = "0.0.0"
 description = "Get Hakai database resources using http calls"
 authors = [
-    {name = "Taylor Denouden", email = "taylor.denouden@hakai.org"},
+    { name = "Taylor Denouden", email = "taylor.denouden@hakai.org" },
+    { name = "Chris Davis", email = "chris.davis@hakai.org" },
+    { name = "Nate Rosenstock", email = "nate.rosenstock@hakai.org" },
+    { name = "Sam Albers", email = "sam.albers@hakai.org" }
+]
+maintainers = [
+    { name = "Taylor Denouden", email = "taylor.denouden@hakai.org" },
+    { name = "Sam Albers", email = "sam.albers@hakai.org" }
 ]
 repository = "https://github.com/HakaiInstitute/hakai-api-client-py"
 license = "MIT"
@@ -11,6 +18,8 @@ readme = "README.md"
 requires-python = ">=3.8"
 
 dependencies = [
+    "loguru>=0.7.3",
+    "pkce>=1.0.3",
     "pytz>=2025.2",
     "requests>=2.32.3",
     "requests-oauthlib>=2.0.0",
@@ -18,11 +27,55 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "freezegun>=1.5.5",
     "pre-commit>=3.5.0",
     "pytest>=8.3.5",
+    "pytest-mock>=3.14.1",
     "ruff>=0.11.9",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 120
+preview = true
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "N",
+    "Q",
+    "S",
+    "UP",
+    "ANN",
+    "TC",
+    "DOC",
+    "D",
+    "NPY",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "S101",  # Ignore use of assert in tests
+    "N999",  # Invalid module name
+    "D",     # Docstrings
+    "ANN",   # Type annotations - not critical for tests
+    "S105",  # Hardcoded password strings - acceptable in test files
+    "DOC",   # Doc strings - already disabled D for docstrings
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = false
+warn_unused_configs = true
+strict = true
