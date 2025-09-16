@@ -67,9 +67,8 @@ def mock_home_dir(tmp_path, monkeypatch):
     # Patch the AuthStrategy base class to use the mock credentials file
     from hakai_api.auth.base import AuthStrategy
 
-    def mock_init(self, api_root, login_page, credentials_file, **kwargs):
+    def mock_init(self, api_root, credentials_file, **kwargs):
         self.api_root = api_root
-        self.login_page = login_page
         self.credentials_file = Path(mock_creds_file)
 
     monkeypatch.setattr(AuthStrategy, "__init__", mock_init)

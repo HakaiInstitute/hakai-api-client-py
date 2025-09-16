@@ -90,18 +90,13 @@ class TestAuthStrategy:
 
     def test_init(self) -> None:
         """Test AuthStrategy initialization."""
-        strategy = ConcreteAuthStrategy(
-            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
-        )
+        strategy = ConcreteAuthStrategy("https://api.example.com", credentials_file=Path.home() / ".hakai-api-auth")
         assert strategy.api_root == "https://api.example.com"
-        assert strategy.login_page == "https://login.example.com"
         assert strategy.credentials_file == Path.home() / ".hakai-api-auth"
 
     def test_save_and_get_credentials_from_file(self, temp_credentials_file: str, valid_credentials: dict) -> None:
         """Test saving and loading credentials from file."""
-        strategy = ConcreteAuthStrategy(
-            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
-        )
+        strategy = ConcreteAuthStrategy("https://api.example.com", credentials_file=Path.home() / ".hakai-api-auth")
         strategy.credentials_file = temp_credentials_file
 
         # Save credentials
@@ -116,9 +111,7 @@ class TestAuthStrategy:
         self, temp_credentials_file: str, valid_credentials: dict
     ) -> None:
         """Test file_credentials_are_valid with valid credentials."""
-        strategy = ConcreteAuthStrategy(
-            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
-        )
+        strategy = ConcreteAuthStrategy("https://api.example.com", credentials_file=Path.home() / ".hakai-api-auth")
         strategy.credentials_file = temp_credentials_file
 
         # Save valid credentials
@@ -131,9 +124,7 @@ class TestAuthStrategy:
         self, temp_credentials_file: str, expired_credentials: dict
     ) -> None:
         """Test file_credentials_are_valid with expired credentials."""
-        strategy = ConcreteAuthStrategy(
-            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
-        )
+        strategy = ConcreteAuthStrategy("https://api.example.com", credentials_file=Path.home() / ".hakai-api-auth")
         strategy.credentials_file = temp_credentials_file
 
         # Save expired credentials
@@ -146,18 +137,14 @@ class TestAuthStrategy:
 
     def test_file_credentials_are_valid_no_file(self) -> None:
         """Test file_credentials_are_valid with no file."""
-        strategy = ConcreteAuthStrategy(
-            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
-        )
+        strategy = ConcreteAuthStrategy("https://api.example.com", credentials_file=Path.home() / ".hakai-api-auth")
         strategy.credentials_file = Path("/nonexistent/file")
 
         assert strategy.file_credentials_are_valid() is False
 
     def test_parse_credentials_string_valid(self) -> None:
         """Test parsing a valid credentials string."""
-        strategy = ConcreteAuthStrategy(
-            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
-        )
+        strategy = ConcreteAuthStrategy("https://api.example.com", credentials_file=Path.home() / ".hakai-api-auth")
         cred_string = "access_token=test123&token_type=bearer&expires_at=1234567890&expires_in=3600"
 
         result = strategy.parse_credentials_string(cred_string)
@@ -172,9 +159,7 @@ class TestAuthStrategy:
 
     def test_parse_credentials_string_missing_required_keys(self) -> None:
         """Test parsing credentials string with missing required keys."""
-        strategy = ConcreteAuthStrategy(
-            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
-        )
+        strategy = ConcreteAuthStrategy("https://api.example.com", credentials_file=Path.home() / ".hakai-api-auth")
         cred_string = "access_token=test123&expires_in=3600"  # Missing token_type and expires_at
 
         with pytest.raises(ValueError, match="missing required keys"):
@@ -182,9 +167,7 @@ class TestAuthStrategy:
 
     def test_check_keys_convert_types_valid(self) -> None:
         """Test _check_keys_convert_types with valid data."""
-        strategy = ConcreteAuthStrategy(
-            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
-        )
+        strategy = ConcreteAuthStrategy("https://api.example.com", credentials_file=Path.home() / ".hakai-api-auth")
         input_creds = {
             "access_token": "test123",
             "token_type": "bearer",
@@ -204,9 +187,7 @@ class TestAuthStrategy:
 
     def test_reset_credentials(self, temp_credentials_file: str) -> None:
         """Test resetting (deleting) credentials file."""
-        strategy = ConcreteAuthStrategy(
-            "https://api.example.com", "https://login.example.com", credentials_file=Path.home() / ".hakai-api-auth"
-        )
+        strategy = ConcreteAuthStrategy("https://api.example.com", credentials_file=Path.home() / ".hakai-api-auth")
         strategy.credentials_file = temp_credentials_file
 
         # Create file
@@ -310,12 +291,10 @@ class TestDesktopAuthStrategy:
         """Test DesktopAuthStrategy initialization."""
         strategy = DesktopAuthStrategy(
             "https://api.example.com",
-            "https://login.example.com",
             local_port=8080,
             credentials_file=Path.home() / ".hakai-api-auth",
         )
         assert strategy.api_root == "https://api.example.com"
-        assert strategy.login_page == "https://login.example.com"
         assert strategy.local_port == 8080
         assert strategy._state is None
         assert strategy._code_verifier is None

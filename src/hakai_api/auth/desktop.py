@@ -24,16 +24,15 @@ class DesktopAuthStrategy(AuthStrategy):
     (Proof Key for Code Exchange) for native desktop applications.
     """
 
-    def __init__(self, api_root: str, login_page: str, local_port: int = 65500, **kwargs: object) -> None:
+    def __init__(self, api_root: str, local_port: int = 65500, **kwargs: object) -> None:
         """Initialize the desktop authentication strategy.
 
         Args:
             api_root: The base url of the hakai api.
-            login_page: The url of the login page (unused in desktop flow).
-            local_port: Port for local callback server (default 65500).
+            local_port: Port for local callback server.
             **kwargs: Additional parameters.
         """
-        super().__init__(api_root, login_page, **kwargs)
+        super().__init__(api_root, **kwargs)
         self.local_port = local_port
 
         # OAuth state variables

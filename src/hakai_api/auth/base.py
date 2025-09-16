@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class AuthStrategy(ABC):
     """Abstract base class for authentication strategies."""
 
-    def __init__(self, api_root: str, login_page: str, credentials_file: Path, **kwargs: object) -> None:
+    def __init__(self, api_root: str, credentials_file: Path, **kwargs: object) -> None:
         """Initialize the authentication strategy.
 
         Args:
@@ -28,7 +28,6 @@ class AuthStrategy(ABC):
             **kwargs: Additional strategy-specific parameters.
         """
         self.api_root = api_root
-        self.login_page = login_page
         self.credentials_file = credentials_file
 
     @abstractmethod

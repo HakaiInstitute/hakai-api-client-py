@@ -16,6 +16,17 @@ class WebAuthStrategy(AuthStrategy):
     authenticate, and copy/paste the resulting credentials string.
     """
 
+    def __init__(self, api_root: str, login_page: str, **kwargs: object) -> None:
+        """Initialize the authentication strategy.
+
+        Args:
+            api_root: The base url of the hakai api.
+            login_page: The url of the login page to direct users to.
+            **kwargs: Additional parameters passed to the base authentication strategy.
+        """
+        super().__init__(api_root, **kwargs)
+        self.login_page = login_page
+
     def get_credentials(self) -> dict:
         """Get user credentials from web sign-in flow.
 

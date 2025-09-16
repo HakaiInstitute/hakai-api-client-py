@@ -108,10 +108,10 @@ class Client(OAuth2Session):
         # Create authentication strategy
         if auth_flow == "desktop":
             self._auth_strategy = DesktopAuthStrategy(
-                api_root, login_page, local_port=local_port, credentials_file=credentials_file
+                api_root, local_port=local_port, credentials_file=credentials_file
             )
         else:
-            self._auth_strategy = WebAuthStrategy(api_root, login_page, credentials_file=credentials_file)
+            self._auth_strategy = WebAuthStrategy(api_root, login_page=login_page, credentials_file=credentials_file)
 
         # Get credentials using strategy or provided values
         logger.trace(f"Initializing Hakai API client with auth_flow={auth_flow}")
