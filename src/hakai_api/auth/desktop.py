@@ -24,12 +24,13 @@ class DesktopAuthStrategy(AuthStrategy):
     (Proof Key for Code Exchange) for native desktop applications.
     """
 
-    def __init__(self, api_root: str, local_port: int = 65500, **kwargs: object) -> None:
+    def __init__(self, api_root: str, local_port: int = 65500, callback_timeout: int = 120, **kwargs: object) -> None:
         """Initialize the desktop authentication strategy.
 
         Args:
             api_root: The base url of the hakai api.
             local_port: Port for local callback server.
+            callback_timeout: Timeout for callback server in seconds.
             **kwargs: Additional parameters.
         """
         super().__init__(api_root, **kwargs)
@@ -39,6 +40,7 @@ class DesktopAuthStrategy(AuthStrategy):
         self._state = None
         self._code_verifier = None
         self._authorization_code = None
+        self._callback_timeout = callback_timeout
 
     def get_credentials(self) -> dict:
         """Get user credentials using desktop OAuth flow with PKCE.
@@ -228,7 +230,7 @@ class DesktopAuthStrategy(AuthStrategy):
 
         # Start server
         server = HTTPServer(("127.0.0.1", self.local_port), CallbackHandler)
-        server.timeout = 120  # 2 minute timeout
+        server.timeout = self._callback_timeout
         server.handle_request()
         server.server_close()
 

@@ -67,6 +67,7 @@ class Client(OAuth2Session):
         auth_flow: Literal["web", "desktop"] = "web",
         local_port: int = 65500,
         use_refresh: bool = True,
+        callback_timeout: int = 120,
     ) -> None:
         """Create a new Client class with credentials.
 
@@ -88,6 +89,7 @@ class Client(OAuth2Session):
                 Only used when auth_flow="desktop".
             use_refresh: Whether to use the refresh token to automatically extend user sessions.
                 Currently only works for credentials obtained with the "desktop" authentication flow.
+            callback_timeout: Timeout for detecting credentials in browser in seconds.
 
         Raises:
             ValueError: If credentials are unable to be set.
@@ -108,7 +110,7 @@ class Client(OAuth2Session):
         # Create authentication strategy
         if auth_flow == "desktop":
             self._auth_strategy = DesktopAuthStrategy(
-                api_root, local_port=local_port, credentials_file=credentials_file
+                api_root, local_port=local_port, credentials_file=credentials_file, callback_timeout=callback_timeout
             )
         else:
             self._auth_strategy = WebAuthStrategy(api_root, login_page=login_page, credentials_file=credentials_file)
@@ -257,6 +259,7 @@ class Client(OAuth2Session):
         api_root: str = DEFAULT_API_ROOT,
         local_port: int = 65500,
         credentials: str | dict | None = None,
+        callback_timeout: int = 120,
     ) -> Client:
         """Create a client using desktop OAuth authentication flow.
 
@@ -264,6 +267,7 @@ class Client(OAuth2Session):
             api_root: The base url of the hakai api.
             local_port: Port for local callback server.
             credentials: Optional credentials to use.
+            callback_timeout: Timeout for detecting credentials in browser in seconds.
 
         Returns:
             A Client configured for desktop OAuth authentication.
@@ -273,6 +277,7 @@ class Client(OAuth2Session):
             credentials=credentials,
             auth_flow="desktop",
             local_port=local_port,
+            callback_timeout=callback_timeout,
         )
 
     # Backward compatibility methods
