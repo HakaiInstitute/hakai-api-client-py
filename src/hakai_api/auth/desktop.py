@@ -148,6 +148,21 @@ class DesktopAuthStrategy(AuthStrategy):
         authorization_code = None
         server_error = None
 
+        def _get_callback_html() -> str:
+            """Load the HTML callback page from file.
+
+            Returns:
+                The HTML callback page.
+            """
+            from pathlib import Path
+
+            html_file = Path(__file__).parent / "desktop_callback.html"
+            try:
+                with html_file.open("r", encoding="utf-8") as f:
+                    return f.read()
+            except (OSError, FileNotFoundError) as e:
+                logger.error(f"Could not load desktop_callback.html: {e}")
+
         class CallbackHandler(BaseHTTPRequestHandler):
             def do_GET(handler_self) -> None:  # noqa: N802, N805
                 nonlocal authorization_code, server_error
@@ -188,39 +203,7 @@ class DesktopAuthStrategy(AuthStrategy):
                     handler_self.send_header("Content-type", "text/html")
                     handler_self.end_headers()
 
-                    success_html = """
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Authentication Successful</title>
-                        <style>
-                            body {
-                                font-family: -apple-system, system-ui, sans-serif;
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                                height: 100vh;
-                                margin: 0;
-                                background: #82080B;
-                            }
-                            .container {
-                                background: white;
-                                padding: 40px;
-                                border-radius: 10px;
-                                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-                                text-align: center;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <h1>Authentication Successful!</h1>
-                            <p>You can close this window and return to your application.</p>
-                            <script>setTimeout(() => window.close(), 2000);</script>
-                        </div>
-                    </body>
-                    </html>
-                    """
+                    success_html = _get_callback_html()
                     handler_self.wfile.write(success_html.encode())
                 else:
                     handler_self.send_error(404, "Not found")

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Authentication Successful</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nimbus+Sans+L:wght@300;700&display=swap');
+
+        body {
+            font-family: 'Nimbus Sans L', 'Nimbus Sans Light', -apple-system, system-ui, sans-serif;
+            font-weight: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #82080B 0%, #B60C0F 100%);
+            color: #4F4D4D;
+        }
+
+        .container {
+            background: #F2F1ED;
+            padding: 20px 50px 40px 50px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(130, 8, 11, 0.3);
+            text-align: center;
+            max-width: 400px;
+            border: 1px solid #C9C7BE;
+        }
+
+        h1 {
+            font-family: 'Nimbus Sans L', 'Nimbus Sans Bold', -apple-system, system-ui, sans-serif;
+            font-weight: 700;
+            color: #4F4D4D;
+            font-size: clamp(2.2rem, 6vw, 2.5rem);
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            color: #4F4D4D;
+            font-size: clamp(1.4rem, 5vw, 1.5rem);
+            line-height: 1.4;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        /* Mobile-first responsive adjustments */
+        .container {
+            margin: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                margin: 16px;
+                max-width: calc(100vw - 32px);
+            }
+
+            h1 {
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+            .container {
+                padding: 35px 30px;
+            }
+        }
+
+        /* Subtle animation for better UX */
+        .container {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Authentication Successful!</h1>
+        <p>You can now close this window and return to your application.</p>
+    </div>
+    <script>setTimeout(() => window.close(), 2000);</script>
+</body>
+</html>
