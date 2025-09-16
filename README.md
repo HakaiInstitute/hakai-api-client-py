@@ -78,14 +78,14 @@ print(response.json())
 
 ```python
 from hakai_api import Client
+import os
 
 # Set user agent during initialization
 client = Client(user_agent="MyApp/1.0 (contact@example.com)")
 
 # Or set via environment variable
-# export HAKAI_API_USER_AGENT="MyApp/1.0 (contact@example.com)"
+os.environ['HAKAI_API_USER_AGENT'] = "MyApp/1.0 (contact@example.com)"
 client = Client()
-```
 
 # Methods
 
