@@ -86,6 +86,7 @@ client = Client(user_agent="MyApp/1.0 (contact@example.com)")
 # Or set via environment variable
 os.environ['HAKAI_API_USER_AGENT'] = "MyApp/1.0 (contact@example.com)"
 client = Client()
+```
 
 # Methods
 
