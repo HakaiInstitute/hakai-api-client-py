@@ -52,8 +52,8 @@ class Client(OAuth2Session):
         >>> response = client.get("/custom/endpoint")
     """
 
-    DEFAULT_API_ROOT = "https://hecate.hakai.org/api"
-    DEFAULT_LOGIN_PAGE = "https://hecate.hakai.org/api-client-login"
+    DEFAULT_API_ROOT = "https://portal.hakai.org/api"
+    DEFAULT_LOGIN_PAGE = "https://portal.hakai.org/api-client-login"
     CREDENTIALS_ENV_VAR = "HAKAI_API_CREDENTIALS"
     USER_AGENT_ENV_VAR = "HAKAI_API_USER_AGENT"
 
