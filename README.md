@@ -111,7 +111,7 @@ from, see the [Hakai API documentation](https://github.com/HakaiInstitute/hakai-
 ## Custom API Endpoints
 
 You can specify which API to access when instantiating the Client. By default, the API
-uses `https://hecate.hakai.org/api` as the API root. It may be useful to use this
+uses `https://portal.hakai.org/api` as the API root. It may be useful to use this
 library to access a locally running API instance or to access the Goose API for testing
 purposes. If you are always going to be accessing data from a locally running API
 instance, you are better off using the requests.py library directly since Authorization
@@ -136,7 +136,7 @@ client = Client()
 
 # These are equivalent:
 response1 = client.get('/eims/views/output/stations')
-response2 = client.get('https://hecate.hakai.org/api/eims/views/output/stations')
+response2 = client.get('https://portal.hakai.org/api/eims/views/output/stations')
 ```
 
 ## Credentials Configuration
