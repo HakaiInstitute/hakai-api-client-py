@@ -6,7 +6,7 @@ The exported `Client` class extends the functionality of the
 Python [requests library](https://docs.python-requests.org/en/master/) to supply Hakai
 OAuth2 credentials with url requests.
 
-![PyPI](https://img.shields.io/pypi/v/hakai-api)   [![tests](https://github.com/HakaiInstitute/hakai-api-client-py/actions/workflows/test.yaml/badge.svg)](https://github.com/HakaiInstitute/hakai-api-client-py/actions/workflows/test.yaml)  [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](https://opensource.org/licenses/MIT)
+[![PyPI](https://img.shields.io/pypi/v/hakai-api)](https://pypi.org/project/hakai_api/) [![tests](https://github.com/HakaiInstitute/hakai-api-client-py/actions/workflows/test.yaml/badge.svg)](https://github.com/HakaiInstitute/hakai-api-client-py/actions/workflows/test.yaml)  [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](https://opensource.org/licenses/MIT)
 
 <details>
 
