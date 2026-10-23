@@ -3,10 +3,11 @@
 import json
 import os
 import tempfile
-from datetime import datetime, timezone
+from collections.abc import Generator
+from datetime import UTC, datetime
 from pathlib import Path
 from time import mktime
-from typing import Any, Generator
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -18,7 +19,7 @@ class ConcreteAuthStrategy(AuthStrategy):
     """Concrete implementation for testing the abstract base class."""
 
     def get_credentials(self) -> dict:
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         return {
             "access_token": "test_token",
             "token_type": "bearer",
@@ -58,7 +59,7 @@ def valid_credentials() -> dict:
     Returns:
         dict: Dictionary containing valid test credentials.
     """
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime.now(UTC)
     future_timestamp = int(now_utc.timestamp() + 3600)  # Use UTC timestamp
     return {
         "access_token": "test_access_token",
@@ -75,7 +76,7 @@ def expired_credentials() -> dict:
     Returns:
         dict: Dictionary containing expired test credentials.
     """
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime.now(UTC)
     past_timestamp = int(now_utc.timestamp() - 3600)  # Use UTC timestamp
     return {
         "access_token": "expired_access_token",
@@ -216,7 +217,7 @@ class TestWebAuthStrategy:
     def test_get_credentials_from_env(self) -> None:
         """Test getting credentials from environment variable."""
         # Use a future timestamp to ensure credentials aren't expired
-        future_timestamp = int(mktime(datetime.now(timezone.utc).timetuple()) + 3600)
+        future_timestamp = int(mktime(datetime.now(UTC).timetuple()) + 3600)
         env_value = f"access_token=env_token&token_type=bearer&expires_at={future_timestamp}&expires_in=3600"
 
         with patch.dict(os.environ, {"HAKAI_API_CREDENTIALS": env_value}):
@@ -303,7 +304,7 @@ class TestDesktopAuthStrategy:
     def test_get_credentials_from_env(self) -> None:
         """Test getting credentials from environment variable."""
         # Use a future timestamp to ensure credentials aren't expired
-        future_timestamp = int(mktime(datetime.now(timezone.utc).timetuple()) + 3600)
+        future_timestamp = int(mktime(datetime.now(UTC).timetuple()) + 3600)
         env_value = f"access_token=env_token&token_type=bearer&expires_at={future_timestamp}&expires_in=3600"
 
         with patch.dict(os.environ, {"HAKAI_API_CREDENTIALS": env_value}):
