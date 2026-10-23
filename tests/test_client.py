@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from time import mktime
 from typing import Any, NoReturn
 from unittest.mock import Mock, patch
@@ -15,7 +15,7 @@ from hakai_api import Client
 def test_get_valid_credentials_from_file(temp_credentials_file):
     """Test that credentials can be read from a file."""
     # Create a client object with a temporary credentials file
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     client = Client(
         credentials={
             "token_type": "Bearer",
@@ -45,7 +45,7 @@ def test_get_valid_credentials_from_file(temp_credentials_file):
 def test_expired_credentials_are_handled(temp_credentials_file):
     """Test that expired credentials are removed properly."""
     # Create a client object with expired credentials and a temporary credentials file
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     client = Client(
         credentials={
             "token_type": "Bearer",
@@ -69,7 +69,7 @@ def test_expired_credentials_are_handled(temp_credentials_file):
 def test_custom_api_root(temp_credentials_file):
     """Test that a customized api root can be set."""
     # Create a client object with temporary credentials file
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     client = Client(
         credentials={
             "token_type": "Bearer",
@@ -88,7 +88,7 @@ def test_custom_api_root(temp_credentials_file):
 def test_custom_login_page(temp_credentials_file):
     """Test that a customized login page can be set."""
     # Create a client object with temporary credentials file
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     client = Client(
         credentials={
             "token_type": "Bearer",
@@ -107,7 +107,7 @@ def test_custom_login_page(temp_credentials_file):
 def test_credentials_from_env_variable(temp_credentials_file):
     """Test setting credentials with HAKAI_API_CREDENTIALS environment variable."""
     # Create a client object with temporary credentials file
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     os.environ["HAKAI_API_CREDENTIALS"] = "&".join([
         "token_type=Bearer",
         "access_token=test_access_token",
@@ -145,7 +145,7 @@ def test_user_agent_header(tmp_path):
         del os.environ[Client.USER_AGENT_ENV_VAR]
 
     # Create a client object with default User-Agent
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     client = Client(
         credentials={
             "token_type": "Bearer",
@@ -201,7 +201,7 @@ def temp_credentials_file():
 @pytest.fixture
 def valid_credentials():
     """Sample valid credentials for testing."""
-    future_timestamp = int(mktime(datetime.now(timezone.utc).timetuple()) + 3600)
+    future_timestamp = int(mktime(datetime.now(UTC).timetuple()) + 3600)
     return {
         "access_token": "valid_token",
         "token_type": "Bearer",
@@ -213,7 +213,7 @@ def valid_credentials():
 @pytest.fixture
 def expired_credentials():
     """Sample expired credentials for testing."""
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime.now(UTC)
     past_timestamp = int(now_utc.timestamp() - 3600)  # Use UTC timestamp
     return {
         "access_token": "expired_token",
@@ -226,7 +226,7 @@ def expired_credentials():
 @pytest.fixture
 def credentials_with_refresh():
     """Sample credentials with refresh token."""
-    future_timestamp = int(mktime(datetime.now(timezone.utc).timetuple()) + 3600)
+    future_timestamp = int(mktime(datetime.now(UTC).timetuple()) + 3600)
     return {
         "access_token": "token_with_refresh",
         "token_type": "Bearer",
@@ -325,7 +325,7 @@ class TestClientCredentialScenarios:
             return {
                 "access_token": "new_token",
                 "token_type": "Bearer",
-                "expires_at": int(mktime(datetime.now(timezone.utc).timetuple()) + 3600),
+                "expires_at": int(mktime(datetime.now(UTC).timetuple()) + 3600),
                 "expires_in": 3600,
             }
 
@@ -367,7 +367,7 @@ class TestClientCredentialScenarios:
             return {
                 "access_token": "new_token",
                 "token_type": "Bearer",
-                "expires_at": int(mktime(datetime.now(timezone.utc).timetuple()) + 3600),
+                "expires_at": int(mktime(datetime.now(UTC).timetuple()) + 3600),
                 "expires_in": 3600,
             }
 
@@ -414,7 +414,7 @@ class TestClientCredentialScenarios:
     def test_expired_env_credentials_are_rejected(self, tmp_path):
         """Test that expired environment credentials are rejected."""
         # Set expired credentials in environment
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         past_timestamp = int(now_utc.timestamp() - 3600)  # Use UTC timestamp
         expired_env_creds = (
             f"access_token=expired_env_token&token_type=Bearer&expires_at={past_timestamp}&expires_in=3600"
@@ -473,7 +473,7 @@ class TestClientCredentialScenarios:
             return {
                 "access_token": "new_token",
                 "token_type": "Bearer",
-                "expires_at": int(mktime(datetime.now(timezone.utc).timetuple()) + 3600),
+                "expires_at": int(mktime(datetime.now(UTC).timetuple()) + 3600),
                 "expires_in": 3600,
             }
 
@@ -514,7 +514,7 @@ class TestClientRefreshTokenScenarios:
         credentials_with_refresh = {
             "access_token": "old_token",
             "token_type": "Bearer",
-            "expires_at": int(mktime(datetime.now(timezone.utc).timetuple()) + 3600),
+            "expires_at": int(mktime(datetime.now(UTC).timetuple()) + 3600),
             "expires_in": 3600,
             "refresh_token": "refresh123",
         }
@@ -524,7 +524,7 @@ class TestClientRefreshTokenScenarios:
             return {
                 "access_token": "refreshed_token",
                 "token_type": "Bearer",
-                "expires_at": int(mktime(datetime.now(timezone.utc).timetuple()) + 7200),
+                "expires_at": int(mktime(datetime.now(UTC).timetuple()) + 7200),
                 "expires_in": 7200,
                 "refresh_token": "refresh123",
             }
@@ -544,7 +544,7 @@ class TestClientRefreshTokenScenarios:
         credentials_with_refresh = {
             "access_token": "old_token",
             "token_type": "Bearer",
-            "expires_at": int(mktime(datetime.now(timezone.utc).timetuple()) + 3600),
+            "expires_at": int(mktime(datetime.now(UTC).timetuple()) + 3600),
             "expires_in": 3600,
             "refresh_token": "refresh123",
         }
@@ -554,7 +554,7 @@ class TestClientRefreshTokenScenarios:
             mock_response.status_code = 200
             mock_response.json.return_value = {
                 "access_token": "refreshed_web_token",
-                "expires_at": int(mktime(datetime.now(timezone.utc).timetuple()) + 7200),
+                "expires_at": int(mktime(datetime.now(UTC).timetuple()) + 7200),
                 "expires_in": 7200,
             }
             return mock_response
@@ -581,7 +581,7 @@ class TestClientRefreshTokenScenarios:
         credentials_with_refresh = {
             "access_token": "old_token",
             "token_type": "Bearer",
-            "expires_at": int(mktime(datetime.now(timezone.utc).timetuple()) + 3600),
+            "expires_at": int(mktime(datetime.now(UTC).timetuple()) + 3600),
             "expires_in": 3600,
             "refresh_token": "invalid_refresh",
         }

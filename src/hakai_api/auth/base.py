@@ -45,7 +45,7 @@ class AuthStrategy(ABC):
     @property
     @abstractmethod
     def client_type(self) -> str:
-        """Get the client type for this authentication strategy.
+        """The client type for this authentication strategy.
 
         Returns:
             The client type string (e.g., 'web', 'desktop').

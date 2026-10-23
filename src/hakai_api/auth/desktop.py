@@ -257,7 +257,7 @@ class DesktopAuthStrategy(AuthStrategy):
 
     @property
     def client_type(self) -> str:
-        """Get the client type for desktop authentication strategy."""
+        """The client type for the desktop authentication strategy."""
         return "desktop"
 
     # refresh_token method is now inherited from AuthStrategy base class

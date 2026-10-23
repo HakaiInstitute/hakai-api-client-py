@@ -88,7 +88,7 @@ class WebAuthStrategy(AuthStrategy):
 
     @property
     def client_type(self) -> str:
-        """Get the client type for web authentication strategy."""
+        """The client type for the web authentication strategy."""
         return "web"
 
     # refresh_token method is now inherited from AuthStrategy base class

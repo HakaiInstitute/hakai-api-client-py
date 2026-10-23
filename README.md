@@ -33,7 +33,7 @@ OAuth2 credentials with url requests.
 
 # Installation
 
-Python 3.8 or higher is required. Install with pip:
+Python 3.11 or higher is required. Install with pip:
 
 ```bash
 pip install hakai-api
