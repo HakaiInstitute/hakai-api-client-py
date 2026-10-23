@@ -151,7 +151,7 @@ class Client(OAuth2Session):
 
     @property
     def api_root(self) -> str:
-        """Return the api base url.
+        """The API base URL.
 
         Returns:
             The base URL of the Hakai API.
@@ -160,7 +160,7 @@ class Client(OAuth2Session):
 
     @property
     def login_page(self) -> str:
-        """Return the login page url.
+        """The login page URL.
 
         Returns:
             The URL of the login page.
@@ -169,7 +169,7 @@ class Client(OAuth2Session):
 
     @property
     def credentials(self) -> dict:
-        """Return the credentials object.
+        """The credentials object.
 
         Returns:
             Credentials object.
