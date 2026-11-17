@@ -3,16 +3,42 @@
 from __future__ import annotations
 
 import json
+import os
 from abc import ABC, abstractmethod
 from datetime import datetime
+from pathlib import Path
 from time import mktime
-from typing import TYPE_CHECKING
 
 import requests
 from loguru import logger
 
-if TYPE_CHECKING:
-    from pathlib import Path
+CREDENTIALS_ENV_VAR = "HAKAI_API_CREDENTIALS"
+"""Environment variable holding a credentials string (`access_token=...&token_type=...&expires_at=...`)."""
+
+CREDENTIALS_FILE_ENV_VAR = "HAKAI_API_CREDENTIALS_FILE"
+"""Environment variable holding the path of the file used to cache credentials."""
+
+_REQUIRED_CREDENTIAL_KEYS = ("access_token", "token_type", "expires_at")
+
+
+def is_credentials_string(value: str) -> bool:
+    """Check whether a value looks like a credentials string, without logging.
+
+    A credentials string is an `&`-separated list of `key=value` pairs containing at
+    least `access_token`, `token_type` and a numeric `expires_at`. Expiry is not checked.
+
+    Args:
+        value: The value to check.
+
+    Returns:
+        True if the value parses as a credentials string, False otherwise.
+    """
+    try:
+        parsed = dict(pair.split("=") for pair in value.split("&"))
+        float(parsed["expires_at"])
+    except (ValueError, KeyError):
+        return False
+    return all(key in parsed for key in _REQUIRED_CREDENTIAL_KEYS)
 
 
 class AuthStrategy(ABC):
@@ -51,6 +77,38 @@ class AuthStrategy(ABC):
             The client type string (e.g., 'web', 'desktop').
         """
         pass
+
+    def get_credentials_from_env(self) -> dict | None:
+        """Get unexpired credentials from the `HAKAI_API_CREDENTIALS` environment variable.
+
+        Returns:
+            The parsed credentials, or None if the variable is unset, invalid, or the
+            credentials have expired.
+        """
+        env_credentials = os.getenv(CREDENTIALS_ENV_VAR)
+        if env_credentials is None:
+            return None
+
+        if not is_credentials_string(env_credentials):
+            if Path(env_credentials) == self.credentials_file:
+                # Deprecated usage: the variable holds the credentials file path. The Client
+                # has already resolved it as such and warned, so there is nothing to parse.
+                logger.trace(f"{CREDENTIALS_ENV_VAR} holds the credentials file path, not credentials")
+            else:
+                logger.warning(f"Invalid environment variable credentials in {CREDENTIALS_ENV_VAR}")
+            return None
+
+        logger.trace("Loading credentials from environment variable")
+        try:
+            parsed_creds = self.parse_credentials_string(env_credentials)
+        except (ValueError, KeyError) as e:
+            logger.warning(f"Invalid environment variable credentials: {e}")
+            return None
+
+        if self._are_credentials_expired(parsed_creds):
+            logger.warning("Environment variable credentials have expired")
+            return None
+        return parsed_creds
 
     def save_credentials_to_file(self, credentials: dict) -> None:
         """Save the credentials object to a file.

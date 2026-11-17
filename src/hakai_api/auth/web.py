@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-
 from loguru import logger
 
 from .base import AuthStrategy
@@ -37,18 +35,9 @@ class WebAuthStrategy(AuthStrategy):
             A dict containing the credentials parsed from user input or cache.
         """
         # Try environment variable first
-        env_credentials = os.getenv("HAKAI_API_CREDENTIALS")
+        env_credentials = self.get_credentials_from_env()
         if env_credentials is not None:
-            logger.trace("Loading credentials from environment variable")
-            try:
-                parsed_creds = self.parse_credentials_string(env_credentials)
-                # Check if environment credentials are expired
-                if self._are_credentials_expired(parsed_creds):
-                    logger.warning("Environment variable credentials have expired")
-                else:
-                    return parsed_creds
-            except (ValueError, KeyError) as e:
-                logger.warning(f"Invalid environment variable credentials: {e}")
+            return env_credentials
 
         # Try cached credentials
         if self.file_credentials_are_valid():
