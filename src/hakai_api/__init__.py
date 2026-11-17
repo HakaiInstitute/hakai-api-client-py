@@ -10,10 +10,13 @@ and desktop OAuth2 flows with PKCE for secure credential management.
 Example:
     Basic usage:
 
-    >>> from hakai_api import Client
-    >>> client = Client()
-    >>> response = client.get("/eims/views/output/stations")
-    >>> data = response.json()
+    ```python
+    from hakai_api import Client
+
+    client = Client()
+    response = client.get("/eims/views/output/stations")
+    data = response.json()
+    ```
 
 Classes:
     Client: Main API client class for authenticated requests.

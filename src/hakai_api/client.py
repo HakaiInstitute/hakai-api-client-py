@@ -40,18 +40,24 @@ class Client(OAuth2Session):
     Example:
         Basic usage with default settings:
 
-        >>> client = Client()
-        >>> response = client.get("/eims/views/output/stations")
+        ```python
+        client = Client()
+        response = client.get("/eims/views/output/stations")
+        ```
 
         Desktop OAuth flow:
 
-        >>> client = Client(auth_flow="desktop")
-        >>> response = client.get("/eims/views/output/stations")
+        ```python
+        client = Client(auth_flow="desktop")
+        response = client.get("/eims/views/output/stations")
+        ```
 
         Custom API endpoint:
 
-        >>> client = Client(api_root="https://custom.api.endpoint")
-        >>> response = client.get("/custom/endpoint")
+        ```python
+        client = Client(api_root="https://custom.api.endpoint")
+        response = client.get("/custom/endpoint")
+        ```
     """
 
     DEFAULT_API_ROOT = "https://portal.hakai.org/api"
