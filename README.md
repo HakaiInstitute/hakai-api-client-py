@@ -1,4 +1,4 @@
-# Hakai Api Python Client
+# Hakai API Python Client
 
 This project exports a single Python class that can be used to make HTTP requests to the
 Hakai API resource server.
