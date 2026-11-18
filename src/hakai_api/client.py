@@ -10,6 +10,7 @@ from loguru import logger
 from requests_oauthlib import OAuth2Session
 
 from .auth import DesktopAuthStrategy, WebAuthStrategy
+from .auth.base import CREDENTIALS_ENV_VAR, CREDENTIALS_FILE_ENV_VAR, is_credentials_string
 
 if TYPE_CHECKING:
     from requests import Response
@@ -32,7 +33,8 @@ class Client(OAuth2Session):
     Attributes:
         DEFAULT_API_ROOT: Default production API base URL.
         DEFAULT_LOGIN_PAGE: Default production login page URL.
-        CREDENTIALS_ENV_VAR: Environment variable name for credentials.
+        CREDENTIALS_ENV_VAR: Environment variable name for a credentials string.
+        CREDENTIALS_FILE_ENV_VAR: Environment variable name for the credentials file path.
         USER_AGENT_ENV_VAR: Environment variable name for User-Agent header.
 
     Example:
@@ -54,7 +56,8 @@ class Client(OAuth2Session):
 
     DEFAULT_API_ROOT = "https://portal.hakai.org/api"
     DEFAULT_LOGIN_PAGE = "https://portal.hakai.org/api-client-login"
-    CREDENTIALS_ENV_VAR = "HAKAI_API_CREDENTIALS"
+    CREDENTIALS_ENV_VAR = CREDENTIALS_ENV_VAR
+    CREDENTIALS_FILE_ENV_VAR = CREDENTIALS_FILE_ENV_VAR
     USER_AGENT_ENV_VAR = "HAKAI_API_USER_AGENT"
 
     def __init__(
@@ -77,9 +80,12 @@ class Client(OAuth2Session):
             login_page: The url of the login page to direct users to.
                 Defaults to the production login page.
             credentials: Credentials token retrieved from the hakai api
-                login page. If `None`, loads cached credentials or prompts for log in.
+                login page. If `None`, uses the credentials string in environment variable `HAKAI_API_CREDENTIALS`
+                if defined and unexpired, else loads cached credentials or prompts for log in.
             credentials_file: The path to the file where credentials are saved. This will default to the path given by
-                environment variable `HAKAI_API_CREDENTIALS`, if defined, else to `~/.hakai-api-auth`.
+                environment variable `HAKAI_API_CREDENTIALS_FILE`, if defined, else to `~/.hakai-api-auth`.
+                Setting a file path in `HAKAI_API_CREDENTIALS` is deprecated but still honoured (with a warning)
+                when `HAKAI_API_CREDENTIALS_FILE` is unset and the value is not a credentials string.
             user_agent: A user-agent string to use when requesting the hakai api to identify your application.
                 This will default to the value given by environment variable `HAKAI_API_USER_AGENT`, if defined, else
                 to `hakai-api-client-py`.
@@ -101,7 +107,7 @@ class Client(OAuth2Session):
         self._use_refresh = use_refresh
 
         if credentials_file is None:
-            credentials_file = os.getenv(self.CREDENTIALS_ENV_VAR, Path.home() / ".hakai-api-auth")
+            credentials_file = self._default_credentials_file()
         credentials_file = Path(credentials_file)
 
         if user_agent is None:
@@ -148,6 +154,32 @@ class Client(OAuth2Session):
         # Set User-Agent header
         self.headers.update({"User-Agent": user_agent})
         logger.debug(f"Hakai API client initialized successfully with User-Agent: {user_agent}")
+
+    @classmethod
+    def _default_credentials_file(cls) -> Path:
+        """Resolve the credentials file path when none is passed explicitly.
+
+        Uses `HAKAI_API_CREDENTIALS_FILE` if set, else `~/.hakai-api-auth`. For backward
+        compatibility, if `HAKAI_API_CREDENTIALS_FILE` is unset and `HAKAI_API_CREDENTIALS`
+        holds something that is not a credentials string, it is treated as a file path
+        and a deprecation warning is logged.
+
+        Returns:
+            The credentials file path.
+        """
+        env_file = os.getenv(cls.CREDENTIALS_FILE_ENV_VAR)
+        if env_file:
+            return Path(env_file)
+
+        legacy_value = os.getenv(cls.CREDENTIALS_ENV_VAR)
+        if legacy_value and not is_credentials_string(legacy_value):
+            logger.warning(
+                f"Using {cls.CREDENTIALS_ENV_VAR} to set the credentials file path is deprecated. "
+                f"Set {cls.CREDENTIALS_FILE_ENV_VAR} instead; {cls.CREDENTIALS_ENV_VAR} is for credentials strings."
+            )
+            return Path(legacy_value)
+
+        return Path.home() / ".hakai-api-auth"
 
     @property
     def api_root(self) -> str:

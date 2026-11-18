@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 from datetime import UTC, datetime
@@ -8,6 +9,7 @@ from typing import Any, NoReturn
 from unittest.mock import Mock, patch
 
 import pytest
+from loguru import logger
 
 from hakai_api import Client
 
@@ -598,3 +600,152 @@ class TestClientRefreshTokenScenarios:
 
             assert result is False
             assert client.credentials["access_token"] == "old_token"  # noqa: S105  # Unchanged
+
+
+class TestCredentialsEnvVars:
+    """`HAKAI_API_CREDENTIALS` holds a credentials string; `HAKAI_API_CREDENTIALS_FILE` holds a file path."""
+
+    @pytest.fixture
+    def credentials_dict(self):
+        return {
+            "token_type": "Bearer",
+            "access_token": "test_access_token",
+            "expires_in": 3600,
+            "expires_at": int(datetime.now(UTC).timestamp()) + 3600,
+        }
+
+    @pytest.fixture
+    def credentials_str(self, credentials_dict):
+        return "&".join(f"{k}={v}" for k, v in credentials_dict.items())
+
+    @pytest.fixture
+    def isolated_env(self, monkeypatch, tmp_path):
+        """Clear credential env vars, run from an empty cwd, and point the home directory at tmp_path."""
+        monkeypatch.delenv(Client.CREDENTIALS_ENV_VAR, raising=False)
+        monkeypatch.delenv(Client.CREDENTIALS_FILE_ENV_VAR, raising=False)
+        home = tmp_path / "home"
+        home.mkdir()
+        cwd = tmp_path / "cwd"
+        cwd.mkdir()
+        monkeypatch.setattr("pathlib.Path.home", lambda: home)
+        monkeypatch.chdir(cwd)
+        return {"home": home, "cwd": cwd}
+
+    @pytest.fixture
+    def warnings(self):
+        """Collect loguru WARNING-or-higher messages emitted during the test."""
+        messages = []
+        handler_id = logger.add(lambda m: messages.append(m.record["message"]), level="WARNING")
+        yield messages
+        logger.remove(handler_id)
+
+    def test_env_var_names(self):
+        assert Client.CREDENTIALS_ENV_VAR == "HAKAI_API_CREDENTIALS"
+        assert Client.CREDENTIALS_FILE_ENV_VAR == "HAKAI_API_CREDENTIALS_FILE"
+
+    def test_default_credentials_file(self, isolated_env, credentials_dict):
+        client = Client(credentials=credentials_dict)
+
+        assert client.credentials_file == str(isolated_env["home"] / ".hakai-api-auth")
+
+    def test_credentials_string_env_var_is_not_used_as_file_path(
+        self, monkeypatch, isolated_env, credentials_str, warnings
+    ):
+        monkeypatch.setenv(Client.CREDENTIALS_ENV_VAR, credentials_str)
+
+        client = Client()
+
+        assert client.credentials["access_token"] == "test_access_token"
+        assert client.credentials_file == str(isolated_env["home"] / ".hakai-api-auth")
+        assert (isolated_env["home"] / ".hakai-api-auth").is_file()
+        # No token-named file was written to the working directory
+        assert list(isolated_env["cwd"].iterdir()) == []
+        assert not any("deprecated" in m.lower() for m in warnings)
+
+    def test_expired_credentials_string_env_var_is_not_used_as_file_path(
+        self, monkeypatch, isolated_env, credentials_dict
+    ):
+        now = int(datetime.now(UTC).timestamp())
+        expired = {**credentials_dict, "expires_at": now - 3600}
+        monkeypatch.setenv(Client.CREDENTIALS_ENV_VAR, "&".join(f"{k}={v}" for k, v in expired.items()))
+        fresh = {**credentials_dict, "access_token": "fresh", "expires_at": now + 3600}
+
+        with patch("hakai_api.auth.web.WebAuthStrategy._get_credentials_from_web_input", return_value=fresh):
+            client = Client()
+
+        assert client.credentials["access_token"] == "fresh"
+        assert client.credentials_file == str(isolated_env["home"] / ".hakai-api-auth")
+        assert list(isolated_env["cwd"].iterdir()) == []
+
+    def test_credentials_file_env_var_is_respected(self, monkeypatch, isolated_env, tmp_path, credentials_dict):
+        creds_file = tmp_path / "custom" / "creds.json"
+        monkeypatch.setenv(Client.CREDENTIALS_FILE_ENV_VAR, str(creds_file))
+
+        client = Client(credentials=credentials_dict)
+
+        assert client.credentials_file == str(creds_file)
+        assert creds_file.is_file()
+        assert not (isolated_env["home"] / ".hakai-api-auth").exists()
+
+    def test_credentials_file_env_var_combined_with_credentials_string_env_var(
+        self, monkeypatch, isolated_env, tmp_path, credentials_str
+    ):
+        creds_file = tmp_path / "creds.json"
+        monkeypatch.setenv(Client.CREDENTIALS_FILE_ENV_VAR, str(creds_file))
+        monkeypatch.setenv(Client.CREDENTIALS_ENV_VAR, credentials_str)
+
+        client = Client()
+
+        assert client.credentials["access_token"] == "test_access_token"
+        assert client.credentials_file == str(creds_file)
+        assert creds_file.is_file()
+        assert list(isolated_env["cwd"].iterdir()) == []
+
+    def test_legacy_file_path_in_credentials_env_var_still_works_and_warns(
+        self, monkeypatch, isolated_env, tmp_path, credentials_dict, warnings
+    ):
+        creds_file = tmp_path / "legacy_creds.json"
+        monkeypatch.setenv(Client.CREDENTIALS_ENV_VAR, str(creds_file))
+
+        client = Client(credentials=credentials_dict)
+
+        assert client.credentials_file == str(creds_file)
+        assert creds_file.is_file()
+        assert any(Client.CREDENTIALS_FILE_ENV_VAR in m and "deprecated" in m.lower() for m in warnings)
+
+    def test_legacy_file_path_loads_cached_credentials_without_invalid_credentials_warning(
+        self, monkeypatch, isolated_env, tmp_path, credentials_dict, warnings
+    ):
+        creds_file = tmp_path / "legacy_creds.json"
+        creds_file.write_text(json.dumps(credentials_dict))
+        monkeypatch.setenv(Client.CREDENTIALS_ENV_VAR, str(creds_file))
+
+        client = Client()
+
+        assert client.credentials["access_token"] == "test_access_token"
+        assert not any("invalid environment variable credentials" in m.lower() for m in warnings)
+
+    def test_credentials_file_env_var_takes_precedence_over_legacy_path(
+        self, monkeypatch, isolated_env, tmp_path, credentials_dict
+    ):
+        new_file = tmp_path / "new.json"
+        legacy_file = tmp_path / "legacy.json"
+        monkeypatch.setenv(Client.CREDENTIALS_FILE_ENV_VAR, str(new_file))
+        monkeypatch.setenv(Client.CREDENTIALS_ENV_VAR, str(legacy_file))
+
+        client = Client(credentials=credentials_dict)
+
+        assert client.credentials_file == str(new_file)
+        assert not legacy_file.exists()
+
+    def test_explicit_credentials_file_arg_wins(self, monkeypatch, isolated_env, tmp_path, credentials_dict):
+        explicit = tmp_path / "explicit.json"
+        monkeypatch.setenv(Client.CREDENTIALS_FILE_ENV_VAR, str(tmp_path / "from_env.json"))
+        monkeypatch.setenv(Client.CREDENTIALS_ENV_VAR, str(tmp_path / "legacy.json"))
+
+        client = Client(credentials=credentials_dict, credentials_file=explicit)
+
+        assert client.credentials_file == str(explicit)
+        assert explicit.is_file()
+        assert not (tmp_path / "from_env.json").exists()
+        assert not (tmp_path / "legacy.json").exists()

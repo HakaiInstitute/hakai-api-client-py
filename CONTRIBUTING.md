@@ -191,7 +191,10 @@ Some tests may require environment variables:
 export HAKAI_API_USER_AGENT="test-client/1.0"
 
 # Optional: Set custom credentials file location
-export HAKAI_API_CREDENTIALS="/tmp/test-credentials"
+export HAKAI_API_CREDENTIALS_FILE="/tmp/test-credentials"
+
+# Optional: Provide a credentials string instead of logging in
+export HAKAI_API_CREDENTIALS="access_token=...&token_type=Bearer&expires_at=..."
 ```
 
 ## Deployment

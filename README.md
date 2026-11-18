@@ -174,7 +174,7 @@ from hakai_api import Client
 client = Client(credentials_file="/path/to/my/credentials")
 
 # Or use environment variable
-# export HAKAI_API_CREDENTIALS="/path/to/my/credentials"
+# export HAKAI_API_CREDENTIALS_FILE="/path/to/my/credentials"
 client = Client()
 ```
 
