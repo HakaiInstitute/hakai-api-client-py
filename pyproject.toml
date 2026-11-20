@@ -28,10 +28,10 @@ dependencies = [
 [dependency-groups]
 dev = [
     "freezegun>=1.5.5",
-    "pre-commit>=3.5.0",
-    "pytest>=8.3.5",
-    "pytest-mock>=3.14.1",
-    "ruff>=0.11.9",
+    "prek>=0.5.11",
+    "pytest>=9.2.0",
+    "pytest-mock>=3.17.0",
+    "ruff>=0.17.6",
 ]
 docs = [
     "mkdocstrings-python>=2.0.11",

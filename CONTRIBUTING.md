@@ -51,21 +51,22 @@ uv sync
 
 ### Pre-commit
 
-This project uses [pre-commit](https://pre-commit.com/) to run lint checks and tests
-before every commit. To install the pre-commit hooks, run the following command from the
-root directory of the repository while the virtual environment is active:
+This project uses [prek](https://prek.j178.dev/), a fast drop-in replacement for
+[pre-commit](https://pre-commit.com/), to run lint checks before every commit. prek is
+installed as a dev dependency by `uv sync`. To install the git hooks, run the following
+command from the root directory of the repository:
 
 ```bash
-pre-commit install
+uv run prek install
 ```
 
 This is highly recommended and will prevent failed builds on GitHub Actions, as well as
 ensure consistent code style and quality.
 
-You can also run the pre-commit hooks manually on all files by running:
+You can also run the hooks manually on all files by running:
 
 ```bash
-pre-commit run -a
+uv run prek run -a
 ```
 
 ## Tests
