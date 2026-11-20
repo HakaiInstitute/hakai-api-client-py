@@ -5,12 +5,12 @@ it on disk, and attaches it to every request.
 
 ## Choosing a flow
 
-| | Web flow (default) | Desktop flow |
-|---|---|---|
-| How you log in | Open a URL, copy the credentials string, paste it into the terminal | A browser opens; the client receives the token on a local callback server |
-| Needs a browser on the same machine | No | Yes |
-| Refresh tokens | No | Yes, so sessions are extended without logging in again |
-| Good for | SSH sessions, notebooks on remote servers, quick scripts | Desktop apps and scripts run on your own machine |
+|                                     | Web flow (default)                                                  | Desktop flow                                                              |
+|-------------------------------------|---------------------------------------------------------------------|---------------------------------------------------------------------------|
+| How you log in                      | Open a URL, copy the credentials string, paste it into the terminal | A browser opens; the client receives the token on a local callback server |
+| Needs a browser on the same machine | No                                                                  | Yes                                                                       |
+| Refresh tokens                      | No                                                                  | Yes, so sessions are extended without logging in again                    |
+| Good for                            | SSH sessions, notebooks on remote servers, quick scripts            | Desktop apps and scripts run on your own machine                          |
 
 === "Web flow"
 
@@ -68,6 +68,11 @@ page in `HAKAI_API_CREDENTIALS`:
 ```bash
 export HAKAI_API_CREDENTIALS="access_token=...&token_type=Bearer&expires_at=1767225600"
 ```
+
+!!! danger "Keep this secret"
+
+    This string works like a password. Don't commit it to version control. Store it in your CI or container platform's
+    secret manager instead.
 
 ### Changing the credentials file location
 
