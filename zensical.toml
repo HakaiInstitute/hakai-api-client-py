@@ -1,0 +1,80 @@
+[project]
+site_name = "Hakai API Python Client"
+site_description = "Make authenticated requests to the Hakai API from Python"
+site_url = "https://hakai-api-client-py.readthedocs.io/"
+repo_url = "https://github.com/HakaiInstitute/hakai-api-client-py"
+repo_name = "HakaiInstitute/hakai-api-client-py"
+edit_uri = "edit/main/docs/"
+
+nav = [
+  { "Home" = "index.md" },
+  { "Guides" = [
+    { "Authentication" = "guides/authentication.md" },
+    { "Configuration" = "guides/configuration.md" },
+  ] },
+  { "API Reference" = "reference.md" },
+  { "Hakai API Endpoints" = "https://hakaiinstitute.github.io/hakai-api/" },
+  { "Contributing" = "contributing.md" },
+]
+
+[project.theme]
+language = "en"
+features = [
+  "navigation.instant",
+  "navigation.sections",
+  "navigation.top",
+  "navigation.footer",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.tabs.link",
+]
+
+[project.theme.palette]
+primary = "teal"
+
+[project.theme.icon]
+logo = "material/api"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/HakaiInstitute/hakai-api-client-py"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/linkedin"
+link = "https://ca.linkedin.com/company/hakai-institute"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/instagram"
+link = "https://www.instagram.com/hakaiinstitute"
+
+[project.markdown_extensions]
+admonition = {}
+attr_list = {}
+md_in_html = {}
+tables = {}
+toc.permalink = true
+toc.toc_depth = 3
+pymdownx.details = {}
+pymdownx.highlight.anchor_linenums = true
+pymdownx.inlinehilite = {}
+pymdownx.superfences.custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+pymdownx.tabbed.alternate_style = true
+pymdownx.snippets.base_path = ["."]
+pymdownx.snippets.check_paths = true
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["src"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+show_root_heading = true
+show_source = false
+heading_level = 2
+members_order = "source"
+merge_init_into_class = true
+separate_signature = true
+show_signature_annotations = true
+signature_crossrefs = true
+filters = ["!^_"]

@@ -17,6 +17,8 @@ and test the code, and deploy a new version.
 - [Linting and Formatting](#linting-and-formatting)
 - [Environment Variables for Testing](#environment-variables-for-testing)
 
+[Documentation](#documentation)
+
 [Deployment](#deployment)
 
 </details>
@@ -24,7 +26,7 @@ and test the code, and deploy a new version.
 ## Project structure
 
 The business logic for this package is located
-in [`src/hakai_api/client.py`](src/hakai_api/client.py).
+in [`src/hakai_api/client.py`](https://github.com/HakaiInstitute/hakai-api-client-py/blob/main/src/hakai_api/client.py).
 All tests are located in the `tests/` directory.
 
 Key components:
@@ -196,6 +198,27 @@ export HAKAI_API_CREDENTIALS_FILE="/tmp/test-credentials"
 # Optional: Provide a credentials string instead of logging in
 export HAKAI_API_CREDENTIALS="access_token=...&token_type=Bearer&expires_at=..."
 ```
+
+## Documentation
+
+The docs site is built with [Zensical](https://zensical.org/) from the Markdown files in `docs/`,
+configured in `zensical.toml`. The API reference is generated from docstrings with
+[mkdocstrings](https://mkdocstrings.github.io/), so keep docstrings in Google style.
+
+Preview the site locally at http://localhost:8000 with live reload:
+
+```bash
+uv run --group docs zensical serve
+```
+
+Build it the same way Read the Docs does (warnings fail the build):
+
+```bash
+uv run --group docs zensical build --strict
+```
+
+Read the Docs builds `main`, each release tag, and a preview for each pull request, using
+`.readthedocs.yaml`.
 
 ## Deployment
 

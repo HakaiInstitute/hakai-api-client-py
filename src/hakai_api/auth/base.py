@@ -49,7 +49,6 @@ class AuthStrategy(ABC):
 
         Args:
             api_root: The base url of the hakai api.
-            login_page: The url of the login page to direct users to.
             credentials_file: The path to the credentials file.
             **kwargs: Additional strategy-specific parameters.
         """
