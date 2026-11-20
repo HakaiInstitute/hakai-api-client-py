@@ -27,7 +27,7 @@ from hakai_api import Client
 client = Client()  # Follow stdout prompts to get an API token
 
 # Make a data request for chlorophyll data (using relative endpoint)
-response = client.get('/eims/views/output/chlorophyll?limit=50')
+response = client.get("/eims/views/output/chlorophyll?limit=50")
 
 print(response.json())
 # [{'action': '', 'event_pk': 7064, 'rn': '1', 'date': '2012-05-17', 'work_area': 'CALVERT'...
